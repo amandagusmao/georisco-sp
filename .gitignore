@@ -1,0 +1,4 @@
+dados_brutos/
+__pycache__/
+.claude/
+*.tmp
