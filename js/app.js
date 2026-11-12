@@ -1,5 +1,5 @@
-// GeoRisco SP – controle das páginas, busca e resultado da consulta.
-import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast } from "./dados.js";
+// GeoRisco SP: controle das páginas, busca e resultado da consulta.
+import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js";
 import { buscarEndereco, enderecoDoPonto } from "./geocode.js";
 import { analisarPonto, preCarregar } from "./analise.js";
 import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js";
@@ -38,7 +38,7 @@ function rota() {
     const lat = +p.get("lat"), lng = +p.get("lng");
     if (lat && lng && `${lat},${lng}` !== chaveAtual) consultar(lat, lng, p.get("end"));
   }
-  document.title = { inicio: "GeoRisco SP – Mapa de riscos geológicos de São Paulo", consulta: "Consulta por endereço – GeoRisco SP", mapa: "Mapa de riscos – GeoRisco SP", painel: "Painel por região – GeoRisco SP", chuva: "Chuva e alerta – GeoRisco SP", riscos: "Entenda os riscos – GeoRisco SP", sobre: "Sobre – GeoRisco SP" }[pagina];
+  document.title = { inicio: "GeoRisco SP | Mapa de riscos geológicos de São Paulo", consulta: "Consulta por endereço | GeoRisco SP", mapa: "Mapa de riscos | GeoRisco SP", painel: "Painel por região | GeoRisco SP", chuva: "Chuva e alerta | GeoRisco SP", riscos: "Entenda os riscos | GeoRisco SP", sobre: "Sobre | GeoRisco SP" }[pagina];
 }
 
 function erro(e) { console.error(e); toast(e.message || "Algo deu errado. Tente novamente."); }
@@ -89,7 +89,7 @@ document.querySelectorAll("[data-busca]").forEach((form) => {
 
 document.querySelectorAll("[data-gps]").forEach((b) => b.addEventListener("click", () => {
   if (!navigator.geolocation) return toast("Seu navegador não permite obter a localização.");
-  toast("Obtendo sua localização…");
+  toast("Obtendo sua localização...");
   navigator.geolocation.getCurrentPosition(
     (pos) => consultar(pos.coords.latitude, pos.coords.longitude, null),
     () => toast("Não foi possível obter sua localização. Verifique a permissão do navegador."),
@@ -106,7 +106,7 @@ async function consultar(lat, lng, rotulo) {
   if (location.hash !== novoHash) history.pushState(null, "", novoHash);
   rota();
   const el = document.getElementById("resultado");
-  el.innerHTML = `<div class="vazio"><span class="spinner"></span>Analisando os riscos deste local…</div>`;
+  el.innerHTML = `<div class="vazio"><span class="spinner"></span>Analisando os riscos deste local...</div>`;
   try {
     if (!rotulo) rotulo = (await enderecoDoPonto(lat, lng)) || `Ponto ${lat.toFixed(5)}, ${lng.toFixed(5)}`;
     const res = await analisarPonto(lat, lng, rotulo);
@@ -141,58 +141,61 @@ function renderizar(res) {
   el.innerHTML = `
   <div class="res-cab">
     <div class="zona" style="--c:${z.cor}">
-      <p class="rotulo">Resultado para</p>
-      <p class="end"><b>${esc(res.endereco)}</b></p>
-      <h2>${z.nome} · risco ${z.nivelNome.toLowerCase()}</h2>
+      <p class="rotulo">Resultado da consulta</p>
+      <p class="end">${esc(res.endereco)}</p>
+      <div class="nivel-grande"><h2>${z.nome}</h2><span class="tag-nivel" style="--c:${z.cor}">Risco ${z.nivelNome.toLowerCase()}</span></div>
       <p>${esc(z.frase)}</p>
-      <div class="tipo"><b>Tipo de zona:</b> ${esc(z.tipo)}${res.terreno ? `<br><b>Terreno:</b> ${esc(res.terreno.tipo)} – ${esc(res.terreno.explicacao)}` : ""}</div>
-      <p class="end" style="margin-top:12px">Distrito <b>${esc(d.nome)}</b> · Subprefeitura ${esc(d.subprefeitura)} · Região ${esc(d.regiao)}</p>
+      <div class="tipo">
+        <div><span>Tipo de zona</span>${esc(z.tipo)}</div>
+        ${res.terreno ? `<div><span>Terreno</span>${esc(res.terreno.tipo)}. ${esc(res.terreno.explicacao)}</div>` : ""}
+        <div><span>Localização</span>Distrito ${esc(d.nome)} · Subprefeitura ${esc(d.subprefeitura)} · Região ${esc(d.regiao)}</div>
+      </div>
     </div>
     <div id="mini-mapa" class="mini-mapa" aria-label="Mapa do local consultado"></div>
   </div>
 
-  <div class="acoes-res" style="margin-top:16px">
-    <button class="btn btn-pri" data-pdf>⬇ Baixar relatório em PDF</button>
-    <button class="btn btn-sec" data-xlsx>⬇ Baixar em Excel</button>
-    <button class="btn btn-sec" data-share>🔗 Compartilhar</button>
-    <a class="btn btn-sec" href="#mapa" data-mapa>🗺️ Ver no mapa</a>
-    <button class="btn btn-sec" data-distrito>📊 Painel do distrito</button>
+  <div class="acoes-res">
+    <button class="btn btn-pri" data-pdf>${icone("i-baixar")}Relatório em PDF</button>
+    <button class="btn btn-sec" data-xlsx>${icone("i-baixar")}Planilha Excel</button>
+    <button class="btn btn-sec" data-share>${icone("i-compartilhar")}Compartilhar</button>
+    <a class="btn btn-sec" href="#mapa" data-mapa>${icone("i-mapa")}Ver no mapa</a>
+    <button class="btn btn-sec" data-distrito>${icone("i-grafico")}Painel do distrito</button>
   </div>
 
-  <h2>Riscos para este endereço</h2>
+  <div class="titulo-bloco"><h2>Riscos para este endereço</h2><span class="nota">Escala de 0 (baixo) a 4 (muito alto)</span></div>
   <div class="riscos-lista">
     ${res.riscos.map((r) => {
       const nv = NIVEIS[r.nivel];
-      return `<article class="risco-item" style="--c:${nv.cor}">
-        <h3><span>${r.icone} ${r.nome}</span><span class="etiqueta ${nv.clara ? "clara" : ""}">${nv.nome}</span></h3>
+      return `<article class="risco-item">
+        <h3><span>${icone(r.icone)}${r.nome}</span><span class="tag-nivel" style="--c:${nv.cor}">${nv.nome}</span></h3>
         ${medidor(r.nivel, nv.cor)}
-        <p class="porque"><b>Por quê:</b></p><ul>${r.motivos.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>
-        <p class="porque" style="margin-top:8px"><b>O que fazer:</b></p><ul class="recomendacoes">${r.dicas.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>
+        <p class="porque">Por quê</p><ul>${r.motivos.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>
+        <p class="porque">O que fazer</p><ul class="recomendacoes">${r.dicas.map((m) => `<li>${esc(m)}</li>`).join("")}</ul>
       </article>`;
     }).join("")}
   </div>
 
   <div class="grade-2">
-    <div class="cartao"><h3>🌧️ Chuva prevista para este local</h3><div id="res-chuva"><span class="spinner"></span>Carregando…</div></div>
+    <div class="cartao"><h3>${icone("i-chuva")}Chuva prevista para este local</h3><div id="res-chuva"><span class="spinner"></span>Carregando...</div></div>
     <div class="cartao">
-      <h3>📊 Seu distrito: ${esc(d.nome)}</h3>
-      <p><span class="etiqueta" style="--c:${NIVEL_DISTRITO[d.nivel]};${d.nivel === "Baixo" || d.nivel === "Moderado" ? "color:#1b1b1b" : ""}">Índice ${d.idx_geral}/100 · ${d.nivel}</span> &nbsp;${d.ranking}º entre os 96 distritos</p>
+      <h3>${icone("i-grafico")}Seu distrito: ${esc(d.nome)}</h3>
+      <p><span class="tag-nivel" style="--c:${NIVEL_DISTRITO[d.nivel]}">Índice ${d.idx_geral} de 100 · ${d.nivel}</span> <span class="nota">&nbsp;${d.ranking}º entre os 96 distritos</span></p>
       <ul class="lista-simples">
-        <li><b>${d.geo_total}</b> setores de risco de deslizamento/solapamento (${d.geo_R3 + d.geo_R4} alto ou muito alto)</li>
-        <li><b>${d.hid_total}</b> setores de risco de alagamento/inundação (${d.hid_R3 + d.hid_R4} alto ou muito alto)</li>
-        <li><b>${fmt(d.moradias_alto)}</b> moradias em setores de risco alto/muito alto</li>
+        <li><b>${d.geo_total}</b> setores de risco de deslizamento ou solapamento (${d.geo_R3 + d.geo_R4} de grau alto ou muito alto)</li>
+        <li><b>${d.hid_total}</b> setores de risco de alagamento ou inundação (${d.hid_R3 + d.hid_R4} de grau alto ou muito alto)</li>
+        <li><b>${fmt(d.moradias_alto)}</b> moradias em setores de risco alto ou muito alto</li>
         <li><b>${d.cont_total}</b> áreas contaminadas cadastradas</li>
         <li><b>${d.oc_total}</b> ocorrências registradas em 2026</li>
       </ul>
-      <h3 style="margin-top:14px">Histórico num raio de 500 m (2026)</h3>
-      <p>${Object.keys(ocs).length ? Object.entries(ocs).map(([t, n]) => `${n} × ${esc(t.toLowerCase())}`).join(" · ") : "Nenhuma ocorrência registrada."}</p>
+      <h3 style="margin-top:16px">Histórico num raio de 500 m (2026)</h3>
+      <p class="nota">${Object.keys(ocs).length ? Object.entries(ocs).map(([t, n]) => `${n} ${esc(t.toLowerCase())}`).join(" · ") : "Nenhuma ocorrência registrada."}</p>
     </div>
   </div>
 
   <div class="cartao">
-    <h3>📍 Áreas de risco e áreas contaminadas próximas</h3>
-    ${prox.length ? `<ul class="lista-simples">${prox.map((p) => `<li><b>${p.d === 0 ? "No local" : p.d + " m"}</b> – ${esc(p.t)}<br><small class="nota">${esc(p.n)}</small></li>`).join("")}</ul>`
-      : `<p>Nenhuma área de risco mapeada num raio de 300 m, nem área contaminada num raio de 500 m.</p>`}
+    <h3>${icone("i-pin")}Áreas de risco e áreas contaminadas próximas</h3>
+    ${prox.length ? `<ul class="lista-simples">${prox.map((p) => `<li><span class="dist">${p.d === 0 ? "No local" : p.d + " m"}</span>${esc(p.t)}<br><small class="nota">${esc(p.n)}</small></li>`).join("")}</ul>`
+      : `<p class="nota">Nenhuma área de risco mapeada num raio de 300 m, nem área contaminada num raio de 500 m.</p>`}
   </div>
 
   <p class="alerta">Resultado informativo, baseado nos dados públicos da Prefeitura. A posição do endereço pode ter imprecisão de dezenas de metros. Não substitui a vistoria da Defesa Civil (<b>199</b>) ou laudo de profissional habilitado.</p>`;
@@ -208,7 +211,7 @@ function renderizar(res) {
   };
   el.querySelector("[data-share]").onclick = async () => {
     const url = location.href;
-    const texto = `GeoRisco SP: ${res.endereco} – ${z.nome} (risco ${z.nivelNome.toLowerCase()}).`;
+    const texto = `GeoRisco SP: ${res.endereco}. ${z.nome}, risco ${z.nivelNome.toLowerCase()}.`;
     try {
       if (navigator.share) await navigator.share({ title: "GeoRisco SP", text: texto, url });
       else { await navigator.clipboard.writeText(url); toast("Link copiado! Cole onde quiser compartilhar."); }
@@ -226,10 +229,10 @@ async function kpisInicio() {
     const { distritos: D } = await carregar("resumo.json");
     const s = (k) => D.reduce((a, d) => a + d[k], 0);
     document.getElementById("kpis-inicio").innerHTML = kpisHTML([
-      { v: s("geo_total"), t: "setores com risco de deslizamento ou solapamento", c: "#e53935" },
-      { v: s("hid_total"), t: "setores com risco de alagamento ou inundação", c: "#2171b5" },
-      { v: s("moradias_alto"), t: "moradias em setores de risco alto ou muito alto", c: "#6a1b9a" },
-      { v: s("cont_contaminada") + s("cont_investigacao") + s("cont_monitoramento"), t: "áreas contaminadas ainda não reabilitadas", c: "#6d1f12" },
+      { v: s("geo_total"), t: "setores com risco de deslizamento ou solapamento" },
+      { v: s("hid_total"), t: "setores com risco de alagamento ou inundação" },
+      { v: s("moradias_alto"), t: "moradias em setores de risco alto ou muito alto" },
+      { v: s("cont_contaminada") + s("cont_investigacao") + s("cont_monitoramento"), t: "áreas contaminadas ainda não reabilitadas" },
     ]);
   } catch (e) { console.error(e); }
 }

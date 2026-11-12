@@ -3,62 +3,87 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>GeoRisco SP – Mapa de riscos geológicos de São Paulo</title>
+  <title>GeoRisco SP | Mapa de riscos geológicos de São Paulo</title>
   <meta name="description" content="Consulte gratuitamente se o seu endereço em São Paulo está em área de risco de alagamento, inundação, deslizamento, erosão ou solo contaminado. Dados oficiais da Prefeitura (GeoSampa).">
-  <meta property="og:title" content="GeoRisco SP – Riscos geológicos em São Paulo">
+  <meta property="og:title" content="GeoRisco SP | Riscos geológicos em São Paulo">
   <meta property="og:description" content="Descubra os riscos do seu endereço: alagamento, deslizamento, erosão e solo contaminado. Gratuito e fácil de entender.">
-  <meta name="theme-color" content="#0b5d4b">
+  <meta name="theme-color" content="#050807">
   <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- Ícones (traço, 24x24) -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <symbol id="i-busca" viewBox="0 0 24 24"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></symbol>
+      <symbol id="i-pin" viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11a7 7 0 0 1 14 0c0 4.8-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></symbol>
+      <symbol id="i-gps" viewBox="0 0 24 24"><circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3"/></symbol>
+      <symbol id="i-mapa" viewBox="0 0 24 24"><path d="M3 6l6-3 6 3 6-3v15l-6 3-6-3-6 3z"/><path d="M9 3v15M15 6v15"/></symbol>
+      <symbol id="i-grafico" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M8 17v-5M13 17V8M18 17v-8"/></symbol>
+      <symbol id="i-chuva" viewBox="0 0 24 24"><path d="M17.5 14a4.5 4.5 0 0 0-1-8.9A6 6 0 0 0 5 7.5 3.5 3.5 0 0 0 6 14h11.5z"/><path d="M8 17l-1 3M12 17l-1 3M16 17l-1 3"/></symbol>
+      <symbol id="i-livro" viewBox="0 0 24 24"><path d="M3 5h6a3 3 0 0 1 3 3v12a2 2 0 0 0-2-2H3z"/><path d="M21 5h-6a3 3 0 0 0-3 3v12a2 2 0 0 1 2-2h7z"/></symbol>
+      <symbol id="i-fone" viewBox="0 0 24 24"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></symbol>
+      <symbol id="i-casa" viewBox="0 0 24 24"><path d="M3 11l9-7 9 7"/><path d="M5 10v10h14V10"/><path d="M10 20v-6h4v6"/></symbol>
+      <symbol id="i-baixar" viewBox="0 0 24 24"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></symbol>
+      <symbol id="i-compartilhar" viewBox="0 0 24 24"><circle cx="18" cy="5" r="2.5"/><circle cx="6" cy="12" r="2.5"/><circle cx="18" cy="19" r="2.5"/><path d="M8.2 13.3l7.6 4.4M15.8 6.3l-7.6 4.4"/></symbol>
+      <symbol id="i-agua" viewBox="0 0 24 24"><path d="M12 3s-5 5.5-5 9a5 5 0 0 0 10 0c0-3.5-5-9-5-9z"/><path d="M2 21c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/></symbol>
+      <symbol id="i-rio" viewBox="0 0 24 24"><path d="M2 8c2 0 2-1.5 4-1.5S8 8 10 8s2-1.5 4-1.5S16 8 18 8s2-1.5 4-1.5"/><path d="M2 13c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/><path d="M2 18c2 0 2-1.5 4-1.5s2 1.5 4 1.5 2-1.5 4-1.5 2 1.5 4 1.5 2-1.5 4-1.5"/></symbol>
+      <symbol id="i-morro" viewBox="0 0 24 24"><path d="M2 20l7-12 4 6 3-4 6 10z"/><path d="M14 20l-2-3"/></symbol>
+      <symbol id="i-erosao" viewBox="0 0 24 24"><path d="M3 9h5l2 3h11"/><path d="M3 14h3l2 3h13"/><path d="M3 4h18M3 20h18"/></symbol>
+      <symbol id="i-frasco" viewBox="0 0 24 24"><path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 1.7 3h10.6a2 2 0 0 0 1.7-3l-5-9V3"/><path d="M7.5 15h9"/></symbol>
+      <symbol id="i-predio" viewBox="0 0 24 24"><path d="M4 21V6l8-3 8 3v15"/><path d="M9 21v-5h6v5M9 9h.01M15 9h.01M9 13h.01M15 13h.01"/></symbol>
+      <symbol id="i-alerta" viewBox="0 0 24 24"><path d="M10.3 3.9L1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/><path d="M12 9v4M12 17h.01"/></symbol>
+      <symbol id="i-camadas" viewBox="0 0 24 24"><path d="M12 2l10 5-10 5L2 7z"/><path d="M2 12l10 5 10-5M2 17l10 5 10-5"/></symbol>
+      <symbol id="i-msg" viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></symbol>
+      <symbol id="i-seta" viewBox="0 0 24 24"><path d="M5 12h14M13 6l6 6-6 6"/></symbol>
+      <symbol id="i-menu" viewBox="0 0 24 24"><path d="M3 6h18M3 12h18M3 18h18"/></symbol>
+    </defs>
+  </svg>
+
   <a class="pular" href="#conteudo">Pular para o conteúdo</a>
 
   <header class="topo">
     <div class="topo-in">
-      <a class="marca" href="#inicio" aria-label="GeoRisco SP – página inicial">
-        <img src="assets/favicon.svg" alt="" width="34" height="34">
-        <span><strong>GeoRisco</strong> SP</span>
+      <a class="marca" href="#inicio" aria-label="GeoRisco SP, página inicial">
+        <img src="assets/favicon.svg" alt="" width="32" height="32">
+        <span>GeoRisco<em>SP</em></span>
       </a>
-      <button class="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu">☰</button>
+      <button class="menu-btn" aria-expanded="false" aria-controls="menu" aria-label="Abrir menu"><svg class="ic"><use href="#i-menu"/></svg></button>
       <nav id="menu" class="menu" aria-label="Navegação principal">
         <a href="#inicio" data-rota="inicio">Início</a>
         <a href="#consulta" data-rota="consulta">Meu endereço</a>
         <a href="#mapa" data-rota="mapa">Mapa</a>
-        <a href="#painel" data-rota="painel">Painel por região</a>
-        <a href="#chuva" data-rota="chuva">Chuva agora</a>
+        <a href="#painel" data-rota="painel">Painel</a>
+        <a href="#chuva" data-rota="chuva">Chuva</a>
         <a href="#riscos" data-rota="riscos">Entenda os riscos</a>
         <a href="#sobre" data-rota="sobre">Sobre</a>
+        <a href="tel:199" class="menu-emerg"><svg class="ic"><use href="#i-fone"/></svg>199</a>
       </nav>
     </div>
   </header>
 
-  <div class="faixa-emergencia" role="note">
-    Em perigo? Ligue <a href="tel:199"><strong>199</strong> Defesa Civil</a> · <a href="tel:193"><strong>193</strong> Bombeiros</a> · <a href="tel:192"><strong>192</strong> SAMU</a>
-  </div>
-
   <main id="conteudo">
 
-    <!-- ============================================ INÍCIO -->
+    <!-- INÍCIO -->
     <section id="inicio" class="pagina" data-pagina="inicio">
       <div class="hero">
         <div class="hero-in">
-          <p class="selo">Gratuito · Dados oficiais da Prefeitura de São Paulo</p>
-          <h1>Sua casa está em área de risco?</h1>
-          <p class="sub">Digite seu endereço ou CEP e veja, em linguagem simples, os riscos de <b>alagamento</b>, <b>deslizamento de terra</b>, <b>erosão</b> e <b>solo contaminado</b> perto de você.</p>
+          <p class="selo"><span class="ponto"></span>Dados oficiais da Prefeitura de São Paulo · Gratuito</p>
+          <h1>Saiba se o seu endereço está em <span class="grad-txt">área de risco</span>.</h1>
+          <p class="sub">Alagamento, inundação, deslizamento de terra, erosão e solo contaminado. Informação técnica explicada de forma simples, para toda a população de São Paulo.</p>
           <form class="busca" data-busca>
             <label class="sr" for="busca-inicio">Endereço ou CEP</label>
-            <input id="busca-inicio" name="q" type="search" placeholder="Ex.: Av. Paulista, 1000 ou 01310-100" autocomplete="street-address" required>
+            <svg class="ic busca-ic"><use href="#i-busca"/></svg>
+            <input id="busca-inicio" name="q" type="search" placeholder="Digite um endereço ou CEP" autocomplete="street-address" required>
             <button type="submit" class="btn btn-pri">Consultar</button>
           </form>
           <div class="busca-extra">
-            <button type="button" class="link-btn" data-gps>📍 Usar minha localização</button>
-            <span aria-hidden="true">·</span>
-            <a href="#mapa" class="link-btn">Ou clique em qualquer ponto do mapa</a>
+            <button type="button" class="link-btn" data-gps><svg class="ic"><use href="#i-gps"/></svg>Usar minha localização</button>
+            <a href="#mapa" class="link-btn"><svg class="ic"><use href="#i-mapa"/></svg>Escolher um ponto no mapa</a>
           </div>
           <div class="sugestoes" data-sugestoes hidden></div>
         </div>
@@ -69,53 +94,63 @@
           <div class="kpi carregando"></div><div class="kpi carregando"></div><div class="kpi carregando"></div><div class="kpi carregando"></div>
         </div>
 
-        <h2 class="titulo-sec">O que você pode fazer aqui</h2>
+        <div class="sec-cab">
+          <p class="sobretitulo">Ferramentas</p>
+          <h2>O que você encontra aqui</h2>
+        </div>
         <div class="cards-acoes">
-          <a class="card-acao" href="#consulta"><span class="ico">🏠</span><h3>Consultar meu endereço</h3><p>Descubra o tipo de zona do seu endereço e o nível de cada risco, com dicas do que fazer.</p></a>
-          <a class="card-acao" href="#mapa"><span class="ico">🗺️</span><h3>Explorar o mapa</h3><p>Veja áreas de risco de deslizamento, alagamento, inundação e áreas contaminadas na cidade.</p></a>
-          <a class="card-acao" href="#painel"><span class="ico">📊</span><h3>Comparar regiões e bairros</h3><p>Painéis com números de cada região e dos 96 distritos. Baixe em Excel ou PDF.</p></a>
-          <a class="card-acao" href="#chuva"><span class="ico">🌧️</span><h3>Previsão de chuva</h3><p>Chuva forte aumenta o risco. Veja a previsão dos próximos dias e o acumulado recente.</p></a>
-          <a class="card-acao" href="#riscos"><span class="ico">📘</span><h3>Entender os riscos</h3><p>O que é cada risco, sinais de alerta e o que fazer antes, durante e depois.</p></a>
-          <a class="card-acao" href="#riscos-contatos"><span class="ico">☎️</span><h3>Contatos de emergência</h3><p>Defesa Civil, Bombeiros, alerta por SMS e canais da Prefeitura.</p></a>
+          <a class="card-acao" href="#consulta"><svg class="ic ic-card"><use href="#i-casa"/></svg><h3>Consulta por endereço</h3><p>Tipo de zona do seu endereço, nível de cada risco e orientações práticas.</p><span class="mais">Consultar <svg class="ic"><use href="#i-seta"/></svg></span></a>
+          <a class="card-acao" href="#mapa"><svg class="ic ic-card"><use href="#i-camadas"/></svg><h3>Mapa interativo</h3><p>Setores de risco, áreas inundáveis, áreas contaminadas e ocorrências registradas.</p><span class="mais">Abrir mapa <svg class="ic"><use href="#i-seta"/></svg></span></a>
+          <a class="card-acao" href="#painel"><svg class="ic ic-card"><use href="#i-grafico"/></svg><h3>Painel por região</h3><p>Indicadores das 5 regiões, 32 subprefeituras e 96 distritos, com exportação em Excel e PDF.</p><span class="mais">Ver painel <svg class="ic"><use href="#i-seta"/></svg></span></a>
+          <a class="card-acao" href="#chuva"><svg class="ic ic-card"><use href="#i-chuva"/></svg><h3>Chuva e alerta</h3><p>Previsão para os próximos 7 dias e chuva acumulada, que aumenta o risco de deslizamentos.</p><span class="mais">Ver previsão <svg class="ic"><use href="#i-seta"/></svg></span></a>
+          <a class="card-acao" href="#riscos"><svg class="ic ic-card"><use href="#i-livro"/></svg><h3>Entenda os riscos</h3><p>O que é cada risco, sinais de alerta e como agir antes, durante e depois da chuva.</p><span class="mais">Saiba mais <svg class="ic"><use href="#i-seta"/></svg></span></a>
+          <a class="card-acao" href="#riscos-contatos"><svg class="ic ic-card"><use href="#i-fone"/></svg><h3>Contatos de emergência</h3><p>Defesa Civil, Bombeiros, SAMU, Prefeitura e alerta gratuito por SMS.</p><span class="mais">Ver contatos <svg class="ic"><use href="#i-seta"/></svg></span></a>
         </div>
 
-        <div class="aviso-sms">
-          <div><strong>Receba alertas da Defesa Civil no celular — de graça.</strong><br>Envie um SMS com o seu <b>CEP</b> para o número <b>40199</b>.</div>
+        <div class="faixa-sms">
+          <svg class="ic ic-grande"><use href="#i-msg"/></svg>
+          <div><strong>Receba alertas da Defesa Civil no celular, de graça.</strong><br>Envie um SMS com o seu CEP para o número <b>40199</b>.</div>
           <a class="btn btn-sec" href="sms:40199">Enviar SMS</a>
         </div>
       </div>
     </section>
 
-    <!-- ============================================ CONSULTA -->
+    <!-- CONSULTA -->
     <section id="consulta" class="pagina" data-pagina="consulta" hidden>
+      <div class="faixa-titulo">
+        <div class="container-t">
+          <p class="sobretitulo">Consulta</p>
+          <h1>Risco do endereço</h1>
+          <form class="busca busca-compacta" data-busca>
+            <label class="sr" for="busca-consulta">Endereço ou CEP</label>
+            <svg class="ic busca-ic"><use href="#i-busca"/></svg>
+            <input id="busca-consulta" name="q" type="search" placeholder="Endereço, bairro ou CEP em São Paulo" required>
+            <button type="submit" class="btn btn-pri">Consultar</button>
+            <button type="button" class="btn btn-sec btn-icone" data-gps title="Usar minha localização" aria-label="Usar minha localização"><svg class="ic"><use href="#i-gps"/></svg></button>
+          </form>
+          <div class="sugestoes" data-sugestoes hidden></div>
+        </div>
+      </div>
       <div class="container">
-        <h1>Consulta por endereço</h1>
-        <form class="busca busca-compacta" data-busca>
-          <label class="sr" for="busca-consulta">Endereço ou CEP</label>
-          <input id="busca-consulta" name="q" type="search" placeholder="Endereço, bairro ou CEP em São Paulo" required>
-          <button type="submit" class="btn btn-pri">Consultar</button>
-          <button type="button" class="btn btn-sec" data-gps title="Usar minha localização">📍</button>
-        </form>
-        <div class="sugestoes" data-sugestoes hidden></div>
         <div id="resultado" aria-live="polite">
           <div class="vazio">
-            <p>Digite um endereço ou CEP acima, use sua localização, ou <a href="#mapa">clique em um ponto do mapa</a>.</p>
+            <p>Digite um endereço ou CEP acima, use sua localização, ou <a href="#mapa">escolha um ponto no mapa</a>.</p>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ============================================ MAPA -->
+    <!-- MAPA -->
     <section id="mapa" class="pagina pagina-mapa" data-pagina="mapa" hidden>
       <div class="mapa-wrap">
         <aside class="mapa-painel" aria-label="Camadas do mapa">
           <form class="busca busca-mapa" data-busca>
             <label class="sr" for="busca-mapa">Endereço ou CEP</label>
             <input id="busca-mapa" name="q" type="search" placeholder="Buscar endereço ou CEP" required>
-            <button type="submit" class="btn btn-pri" aria-label="Buscar">🔎</button>
+            <button type="submit" class="btn btn-pri btn-icone" aria-label="Buscar"><svg class="ic"><use href="#i-busca"/></svg></button>
           </form>
           <div class="sugestoes" data-sugestoes hidden></div>
-          <p class="dica">Dica: clique em qualquer lugar do mapa para analisar aquele ponto.</p>
+          <p class="dica">Clique em qualquer lugar do mapa para analisar aquele ponto.</p>
 
           <h2>Cor dos distritos</h2>
           <select id="indice-mapa" aria-label="Índice usado para colorir os distritos">
@@ -137,14 +172,13 @@
       </div>
     </section>
 
-    <!-- ============================================ PAINEL -->
+    <!-- PAINEL -->
     <section id="painel" class="pagina" data-pagina="painel" hidden>
-      <div class="container">
-        <div class="cab-painel">
-          <div>
-            <h1>Painel por região e distrito</h1>
-            <p class="sub-p">São Paulo tem 96 distritos (os “bairros oficiais”), agrupados em 32 subprefeituras e 5 regiões.</p>
-          </div>
+      <div class="faixa-titulo">
+        <div class="container-t">
+          <p class="sobretitulo">Painel</p>
+          <h1>Riscos por região e distrito</h1>
+          <p class="sub-p">São Paulo tem 96 distritos (os bairros oficiais), agrupados em 32 subprefeituras e 5 regiões.</p>
           <div class="filtros">
             <label>Região
               <select id="f-regiao"><option value="">Cidade toda</option></select>
@@ -152,19 +186,18 @@
             <label>Subprefeitura
               <select id="f-sub"><option value="">Todas</option></select>
             </label>
-            <label>Distrito / bairro
+            <label>Distrito
               <select id="f-distrito"><option value="">Todos</option></select>
             </label>
+            <div class="exportar">
+              <button class="btn btn-sec" id="painel-xlsx"><svg class="ic"><use href="#i-baixar"/></svg>Excel</button>
+              <button class="btn btn-sec" id="painel-pdf"><svg class="ic"><use href="#i-baixar"/></svg>PDF</button>
+            </div>
           </div>
         </div>
-
-        <div class="exportar">
-          <span>Baixar dados deste painel:</span>
-          <button class="btn btn-sec" id="painel-xlsx">⬇ Excel</button>
-          <button class="btn btn-sec" id="painel-pdf">⬇ PDF</button>
-        </div>
-
-        <div class="kpis" id="kpis-painel"></div>
+      </div>
+      <div class="container">
+        <div class="kpis kpis-painel" id="kpis-painel"></div>
 
         <div id="painel-distrito" hidden></div>
 
@@ -178,7 +211,7 @@
         <div class="cartao">
           <div class="tab-cab">
             <h3>Ranking dos distritos</h3>
-            <input type="search" id="busca-tabela" placeholder="Filtrar por nome…" aria-label="Filtrar tabela por nome">
+            <input type="search" id="busca-tabela" placeholder="Filtrar por nome" aria-label="Filtrar tabela por nome">
           </div>
           <div class="tabela-wrap">
             <table class="tabela" id="tabela-distritos">
@@ -196,152 +229,186 @@
               <tbody></tbody>
             </table>
           </div>
-          <p class="nota">Clique em um distrito para ver o painel dele. Índices de 0 a 100 comparam os distritos entre si (veja <a href="#sobre-metodo">Metodologia</a>).</p>
+          <p class="nota">Clique em um distrito para ver o painel dele. Os índices, de 0 a 100, comparam os distritos entre si (veja a <a href="#sobre-metodo">metodologia</a>).</p>
         </div>
       </div>
     </section>
 
-    <!-- ============================================ CHUVA -->
+    <!-- CHUVA -->
     <section id="chuva" class="pagina" data-pagina="chuva" hidden>
+      <div class="faixa-titulo">
+        <div class="container-t">
+          <p class="sobretitulo">Monitoramento</p>
+          <h1>Chuva e alerta</h1>
+          <p class="sub-p">A chuva é o principal gatilho de alagamentos e deslizamentos. Quanto mais chove em poucos dias, mais o solo fica encharcado e instável.</p>
+        </div>
+      </div>
       <div class="container">
-        <h1>Chuva e alerta</h1>
-        <p class="sub-p">A chuva é o principal gatilho de alagamentos e deslizamentos. Quanto mais chove em poucos dias, mais o solo fica encharcado e instável.</p>
-        <div id="chuva-conteudo" aria-live="polite"><div class="vazio">Carregando previsão…</div></div>
-        <p class="nota">Previsão: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (gratuita). Para alertas oficiais acompanhe o <a href="https://www.cgesp.org/" target="_blank" rel="noopener">CGE – Centro de Gerenciamento de Emergências</a> e a Defesa Civil (SMS 40199).</p>
+        <div id="chuva-conteudo" aria-live="polite"><div class="vazio">Carregando previsão...</div></div>
+        <p class="nota">Previsão: <a href="https://open-meteo.com/" target="_blank" rel="noopener">Open-Meteo</a> (gratuita). Para alertas oficiais acompanhe o <a href="https://www.cgesp.org/" target="_blank" rel="noopener">CGE, Centro de Gerenciamento de Emergências</a>, e a Defesa Civil (SMS 40199).</p>
       </div>
     </section>
 
-    <!-- ============================================ RISCOS -->
+    <!-- RISCOS -->
     <section id="riscos" class="pagina" data-pagina="riscos" hidden>
-      <div class="container leitura">
-        <h1>Entenda os riscos</h1>
-        <p class="sub-p">Explicações simples para você reconhecer o perigo e saber agir.</p>
-
+      <div class="faixa-titulo">
+        <div class="container-t">
+          <p class="sobretitulo">Guia</p>
+          <h1>Entenda os riscos</h1>
+          <p class="sub-p">Explicações simples para reconhecer o perigo e saber agir.</p>
+        </div>
+      </div>
+      <div class="container">
         <div class="grade-riscos">
-          <article class="risco-card" style="--c:#1e88e5">
-            <h2>🌊 Alagamento</h2>
-            <p><b>O que é:</b> acúmulo de água nas ruas porque a chuva é mais rápida que a drenagem (bueiros, galerias). Pode acontecer longe de rios.</p>
+          <article class="risco-card">
+            <svg class="ic ic-card"><use href="#i-agua"/></svg>
+            <h2>Alagamento</h2>
+            <p><b>O que é:</b> acúmulo de água nas ruas porque a chuva cai mais rápido do que a drenagem (bueiros e galerias) consegue escoar. Pode acontecer longe de rios.</p>
             <p><b>Sinais:</b> água subindo na sarjeta, bueiros transbordando, lixo entupindo bocas de lobo.</p>
             <p><b>O que fazer:</b> não atravesse ruas alagadas a pé ou de carro (30 cm de água já arrastam um carro). Desligue a energia se a água entrar em casa.</p>
           </article>
-          <article class="risco-card" style="--c:#0d47a1">
-            <h2>🏞️ Inundação e enchente</h2>
-            <p><b>O que é:</b> o rio ou córrego sobe (enchente) e transborda para as margens (inundação). Atinge principalmente as várzeas, as áreas planas e baixas perto dos rios.</p>
+          <article class="risco-card">
+            <svg class="ic ic-card"><use href="#i-rio"/></svg>
+            <h2>Inundação e enchente</h2>
+            <p><b>O que é:</b> o rio ou córrego sobe (enchente) e transborda para as margens (inundação). Atinge principalmente as várzeas, áreas planas e baixas perto dos rios.</p>
             <p><b>Sinais:</b> nível do córrego subindo rápido, água barrenta, barulho forte da correnteza.</p>
             <p><b>O que fazer:</b> leve documentos, remédios e pessoas para um lugar alto. Não volte para buscar objetos.</p>
           </article>
-          <article class="risco-card" style="--c:#e53935">
-            <h2>⛰️ Deslizamento de terra</h2>
+          <article class="risco-card">
+            <svg class="ic ic-card"><use href="#i-morro"/></svg>
+            <h2>Deslizamento de terra</h2>
             <p><b>O que é:</b> terra, rochas ou lixo descem a encosta (escorregamento). É mais comum em morros com cortes, aterros, sem vegetação e com água acumulada.</p>
             <p><b>Sinais:</b> rachaduras novas em paredes e no chão, portas e janelas emperrando, árvores, postes ou muros inclinando, água barrenta minando do barranco, estalos.</p>
-            <p><b>O que fazer:</b> se perceber algum sinal, saia de casa imediatamente e ligue <b>199</b>. Em chuvas fortes e contínuas, procure abrigo em casa de parentes fora da encosta.</p>
+            <p><b>O que fazer:</b> se perceber algum sinal, saia de casa imediatamente e ligue <b>199</b>. Em chuvas fortes e contínuas, procure abrigo fora da encosta.</p>
           </article>
-          <article class="risco-card" style="--c:#8d6e63">
-            <h2>🕳️ Erosão e solapamento</h2>
-            <p><b>O que é:</b> a água arranca e leva o solo aos poucos. <b>Solapamento</b> é quando a correnteza “come” a margem do córrego e a casa na beira perde o apoio.</p>
+          <article class="risco-card">
+            <svg class="ic ic-card"><use href="#i-erosao"/></svg>
+            <h2>Erosão e solapamento</h2>
+            <p><b>O que é:</b> a água arranca e leva o solo aos poucos. <b>Solapamento</b> é quando a correnteza desgasta a margem do córrego e a casa na beira perde o apoio.</p>
             <p><b>Sinais:</b> buracos e sulcos que aumentam a cada chuva, margem do córrego desmoronando, fundação de casas exposta.</p>
-            <p><b>O que fazer:</b> não jogue água de chuva ou esgoto no barranco, mantenha a vegetação, peça vistoria pelo <b>156</b> ou <b>199</b>.</p>
+            <p><b>O que fazer:</b> não jogue água de chuva ou esgoto no barranco, mantenha a vegetação e peça vistoria pelo <b>156</b> ou <b>199</b>.</p>
           </article>
-          <article class="risco-card" style="--c:#6d4c41">
-            <h2>☣️ Solo contaminado</h2>
+          <article class="risco-card">
+            <svg class="ic ic-card"><use href="#i-frasco"/></svg>
+            <h2>Solo contaminado</h2>
             <p><b>O que é:</b> terreno com substâncias perigosas no solo ou na água subterrânea (combustíveis, metais, solventes), em geral de antigos postos, indústrias ou aterros.</p>
-            <p><b>Riscos:</b> a pessoa só se expõe se tiver contato: usar água de poço, cultivar alimentos no solo, inalar vapores em ambientes fechados.</p>
-            <p><b>O que fazer:</b> não use poço sem análise da água, não plante alimentos no local, consulte a <b>CETESB</b> e a Prefeitura antes de construir.</p>
+            <p><b>Riscos:</b> a exposição acontece pelo contato: usar água de poço, cultivar alimentos no solo ou inalar vapores em ambientes fechados.</p>
+            <p><b>O que fazer:</b> não use poço sem análise da água, não plante alimentos no local e consulte a <b>CETESB</b> e a Prefeitura antes de construir.</p>
           </article>
-          <article class="risco-card" style="--c:#546e7a">
-            <h2>🏗️ Recalque e solo mole</h2>
+          <article class="risco-card">
+            <svg class="ic ic-card"><use href="#i-predio"/></svg>
+            <h2>Recalque e solo mole</h2>
             <p><b>O que é:</b> nas várzeas os solos são moles e o lençol freático é raso. Construções podem afundar devagar (recalque) e trincar.</p>
             <p><b>Sinais:</b> trincas inclinadas nas paredes, piso afundando, portas desalinhadas.</p>
             <p><b>O que fazer:</b> antes de construir ou ampliar, contrate um profissional habilitado (engenheiro com ART) e faça sondagem do solo.</p>
           </article>
         </div>
 
-        <h2 id="riscos-graus">O que significam R1, R2, R3 e R4?</h2>
-        <p>A Prefeitura e o IPT classificam as áreas de risco mapeadas em quatro graus:</p>
+        <div class="sec-cab" id="riscos-graus">
+          <p class="sobretitulo">Classificação oficial</p>
+          <h2>O que significam R1, R2, R3 e R4?</h2>
+          <p class="sub-p">A Prefeitura e o IPT classificam as áreas de risco mapeadas em quatro graus.</p>
+        </div>
         <div class="graus">
-          <div class="grau" style="--c:#fdd835"><b>R1 – Baixo</b><span>Pouca chance de acidente nos próximos anos, mantidas as condições atuais.</span></div>
-          <div class="grau" style="--c:#fb8c00"><b>R2 – Médio</b><span>Há sinais de instabilidade, mas ainda pequenos. Precisa de monitoramento.</span></div>
-          <div class="grau" style="--c:#e53935"><b>R3 – Alto</b><span>Sinais claros de instabilidade. Acidentes são possíveis em chuvas fortes.</span></div>
-          <div class="grau" style="--c:#8e24aa"><b>R4 – Muito alto</b><span>Sinais intensos. Acidentes muito prováveis em chuvas fortes; pode ser preciso remover moradores.</span></div>
+          <div class="grau" style="--c:var(--n1)"><b>R1 · Baixo</b><span>Pouca chance de acidente nos próximos anos, mantidas as condições atuais.</span></div>
+          <div class="grau" style="--c:var(--n2)"><b>R2 · Médio</b><span>Há sinais de instabilidade, ainda pequenos. Precisa de monitoramento.</span></div>
+          <div class="grau" style="--c:var(--n3)"><b>R3 · Alto</b><span>Sinais claros de instabilidade. Acidentes são possíveis em chuvas fortes.</span></div>
+          <div class="grau" style="--c:var(--n4)"><b>R4 · Muito alto</b><span>Sinais intensos. Acidentes muito prováveis em chuvas fortes; pode ser preciso remover moradores.</span></div>
         </div>
 
-        <h2>Antes, durante e depois da chuva forte</h2>
+        <div class="sec-cab">
+          <p class="sobretitulo">Prevenção</p>
+          <h2>Antes, durante e depois da chuva forte</h2>
+        </div>
         <div class="grade-3">
-          <div class="cartao"><h3>Antes</h3><ul>
+          <div class="cartao etapa"><span class="etapa-n">01</span><h3>Antes</h3><ul>
             <li>Cadastre seu CEP no SMS <b>40199</b>.</li>
             <li>Combine com a família um local seguro para ir.</li>
-            <li>Deixe documentos e remédios em saco plástico, fácil de pegar.</li>
+            <li>Deixe documentos e remédios em saco plástico, fáceis de pegar.</li>
             <li>Não jogue lixo e entulho em córregos, bueiros e encostas.</li>
           </ul></div>
-          <div class="cartao"><h3>Durante</h3><ul>
+          <div class="cartao etapa"><span class="etapa-n">02</span><h3>Durante</h3><ul>
             <li>Fique longe de córregos, encostas e muros com rachaduras.</li>
             <li>Não enfrente água corrente, nem a pé nem de carro.</li>
             <li>Se morar em encosta e a chuva for forte e longa, saia preventivamente.</li>
             <li>Ligue <b>199</b> ao ver sinais de deslizamento.</li>
           </ul></div>
-          <div class="cartao"><h3>Depois</h3><ul>
+          <div class="cartao etapa"><span class="etapa-n">03</span><h3>Depois</h3><ul>
             <li>Só volte para casa após liberação da Defesa Civil.</li>
             <li>Lave com água sanitária o que teve contato com água de enchente (risco de leptospirose).</li>
-            <li>Procure posto de saúde se tiver febre e dores musculares.</li>
+            <li>Procure um posto de saúde se tiver febre e dores musculares.</li>
             <li>Peça vistoria se surgirem trincas.</li>
           </ul></div>
         </div>
 
-        <h2>Kit de emergência</h2>
-        <p class="kit">🔦 Lanterna e pilhas · 📻 Rádio a pilha · 🔋 Carregador portátil · 💊 Remédios de uso contínuo · 🪪 Documentos em saco plástico · 💧 Água potável · 🥫 Alimentos não perecíveis · 🩹 Kit de primeiros socorros · 📝 Lista de telefones importantes</p>
+        <div class="sec-cab">
+          <p class="sobretitulo">Preparação</p>
+          <h2>Kit de emergência</h2>
+        </div>
+        <ul class="kit">
+          <li>Lanterna e pilhas</li><li>Rádio a pilha</li><li>Carregador portátil</li><li>Remédios de uso contínuo</li><li>Documentos em saco plástico</li><li>Água potável</li><li>Alimentos não perecíveis</li><li>Kit de primeiros socorros</li><li>Lista de telefones importantes</li>
+        </ul>
 
-        <h2 id="riscos-contatos">Contatos úteis (gratuitos)</h2>
+        <div class="sec-cab" id="riscos-contatos">
+          <p class="sobretitulo">Ajuda</p>
+          <h2>Contatos úteis (gratuitos)</h2>
+        </div>
         <div class="contatos">
-          <a class="contato" href="tel:199"><b>199</b><span>Defesa Civil – deslizamento, rachaduras, risco de desabamento</span></a>
-          <a class="contato" href="tel:193"><b>193</b><span>Corpo de Bombeiros – resgate e salvamento</span></a>
-          <a class="contato" href="tel:192"><b>192</b><span>SAMU – emergência médica</span></a>
-          <a class="contato" href="tel:156"><b>156</b><span>Prefeitura (SP156) – bueiro entupido, erosão, poda de árvore, vistoria</span></a>
+          <a class="contato" href="tel:199"><b>199</b><span>Defesa Civil: deslizamento, rachaduras, risco de desabamento</span></a>
+          <a class="contato" href="tel:193"><b>193</b><span>Corpo de Bombeiros: resgate e salvamento</span></a>
+          <a class="contato" href="tel:192"><b>192</b><span>SAMU: emergência médica</span></a>
+          <a class="contato" href="tel:156"><b>156</b><span>Prefeitura (SP156): bueiro entupido, erosão, poda de árvore, vistoria</span></a>
           <a class="contato" href="sms:40199"><b>40199</b><span>SMS gratuito: envie seu CEP e receba alertas da Defesa Civil</span></a>
           <a class="contato" href="https://cetesb.sp.gov.br/areas-contaminadas/" target="_blank" rel="noopener"><b>CETESB</b><span>Relação de áreas contaminadas do Estado de SP</span></a>
         </div>
       </div>
     </section>
 
-    <!-- ============================================ SOBRE -->
+    <!-- SOBRE -->
     <section id="sobre" class="pagina" data-pagina="sobre" hidden>
+      <div class="faixa-titulo">
+        <div class="container-t">
+          <p class="sobretitulo">Projeto</p>
+          <h1>Sobre o GeoRisco SP</h1>
+        </div>
+      </div>
       <div class="container leitura">
-        <h1>Sobre o GeoRisco SP</h1>
-        <p>O <b>GeoRisco SP</b> é uma ferramenta gratuita e de código aberto que reúne, em um só lugar e em linguagem simples, as informações públicas sobre riscos geológicos, hidrológicos e ambientais da cidade de São Paulo. O objetivo é que qualquer pessoa — sem conhecimento técnico — consiga saber se mora, trabalha ou pretende se mudar para uma área de risco, e o que fazer a respeito.</p>
+        <p>O <b>GeoRisco SP</b> é uma ferramenta gratuita e de código aberto que reúne, em um só lugar e em linguagem simples, as informações públicas sobre riscos geológicos, hidrológicos e ambientais da cidade de São Paulo. O objetivo é que qualquer pessoa, sem conhecimento técnico, consiga saber se mora, trabalha ou pretende se mudar para uma área de risco, e o que fazer a respeito.</p>
 
         <h2>Fontes dos dados</h2>
         <ul>
-          <li><b>Áreas de risco geológico</b> (escorregamento e solapamento, graus R1–R4) – Prefeitura de São Paulo / IPT, via <a href="https://geosampa.prefeitura.sp.gov.br/" target="_blank" rel="noopener">GeoSampa</a>.</li>
-          <li><b>Áreas de risco hidrológico</b> (alagamento, enchente, inundação, enxurrada) – Prefeitura de São Paulo, via GeoSampa.</li>
-          <li><b>Áreas inundáveis</b> (período de retorno de 100 anos) – GeoSampa.</li>
-          <li><b>Áreas contaminadas e reabilitadas</b> – Secretaria Municipal do Verde e do Meio Ambiente (SVMA), via GeoSampa.</li>
-          <li><b>Ocorrências de alagamento, inundação e deslizamento em 2026</b> – Defesa Civil (SIGRC), via GeoSampa.</li>
-          <li><b>Chamados de erosão</b> – SP156 / Defesa Civil, via GeoSampa.</li>
-          <li><b>Carta Geotécnica de Aptidão à Urbanização</b> – Prefeitura de São Paulo, via GeoSampa.</li>
-          <li><b>Distritos, subprefeituras e regiões</b> – GeoSampa.</li>
-          <li>Endereços: <a href="https://nominatim.org/" target="_blank" rel="noopener">OpenStreetMap/Nominatim</a> e <a href="https://viacep.com.br/" target="_blank" rel="noopener">ViaCEP</a>. Mapa base: © colaboradores do OpenStreetMap. Chuva: Open-Meteo.</li>
+          <li><b>Áreas de risco geológico</b> (escorregamento e solapamento, graus R1 a R4): Prefeitura de São Paulo e IPT, via <a href="https://geosampa.prefeitura.sp.gov.br/" target="_blank" rel="noopener">GeoSampa</a>.</li>
+          <li><b>Áreas de risco hidrológico</b> (alagamento, enchente, inundação, enxurrada): Prefeitura de São Paulo, via GeoSampa.</li>
+          <li><b>Áreas inundáveis</b> (período de retorno de 100 anos): GeoSampa.</li>
+          <li><b>Áreas contaminadas e reabilitadas</b>: Secretaria Municipal do Verde e do Meio Ambiente (SVMA), via GeoSampa.</li>
+          <li><b>Ocorrências de alagamento, inundação e deslizamento em 2026</b>: Defesa Civil (SIGRC), via GeoSampa.</li>
+          <li><b>Chamados de erosão</b>: SP156 e Defesa Civil, via GeoSampa.</li>
+          <li><b>Carta Geotécnica de Aptidão à Urbanização</b>: Prefeitura de São Paulo, via GeoSampa.</li>
+          <li><b>Distritos, subprefeituras e regiões</b>: GeoSampa.</li>
+          <li>Endereços: <a href="https://nominatim.org/" target="_blank" rel="noopener">OpenStreetMap/Nominatim</a> e <a href="https://viacep.com.br/" target="_blank" rel="noopener">ViaCEP</a>. Mapa base: colaboradores do OpenStreetMap. Chuva: Open-Meteo.</li>
         </ul>
-        <p class="nota">Dados extraídos em <span data-atualizacao>12/11/2026</span>. Os dados são públicos e podem ser atualizados pela Prefeitura a qualquer momento.</p>
+        <p class="nota">Dados extraídos em 12/11/2026. Os dados são públicos e podem ser atualizados pela Prefeitura a qualquer momento.</p>
 
         <h2 id="sobre-metodo">Metodologia</h2>
         <h3>Consulta de endereço</h3>
-        <p>O endereço é convertido em coordenadas e cruzado com as camadas oficiais. Para cada tipo de risco é atribuído um nível de 0 a 4 (Baixo, Atenção, Médio, Alto, Muito alto):</p>
+        <p>O endereço é convertido em coordenadas e cruzado com as camadas oficiais. Para cada tipo de risco é atribuído um nível de 0 a 4 (Baixo, Atenção, Médio, Alto e Muito alto):</p>
         <ul>
-          <li><b>Dentro de um setor de risco mapeado:</b> o nível segue o grau oficial (R1=Atenção, R2=Médio, R3=Alto, R4=Muito alto).</li>
-          <li><b>Até 150 m de um setor R3/R4</b> ou dentro da área inundável de 100 anos: nível Médio ou Alto.</li>
+          <li><b>Dentro de um setor de risco mapeado:</b> o nível segue o grau oficial (R1 Atenção, R2 Médio, R3 Alto, R4 Muito alto).</li>
+          <li><b>Até 150 m de um setor R3 ou R4</b>, ou dentro da área inundável de 100 anos: nível Médio ou Alto.</li>
           <li><b>Tipo de terreno</b> (Carta Geotécnica): várzeas elevam o risco de inundação; morros e serras elevam o de deslizamento e erosão.</li>
           <li><b>Histórico:</b> ocorrências registradas em 2026 num raio de 500 m.</li>
           <li><b>Solo contaminado:</b> distância até áreas classificadas como contaminadas, sob investigação ou em monitoramento.</li>
         </ul>
         <p>A <b>zona</b> do endereço corresponde ao maior nível encontrado entre os riscos.</p>
         <h3>Índice por distrito (0 a 100)</h3>
-        <p>Para cada distrito somamos pontos: setores de risco ponderados pelo grau (R1=1, R2=2, R3=4, R4=8), ocorrências de 2026, chamados de erosão, porcentagem de área inundável, porcentagem de encostas e áreas contaminadas (contaminada=3, sob investigação=2, em monitoramento=1, reabilitada=0,3). Cada soma é convertida em escala logarítmica de 0 a 100 em relação ao distrito com maior valor. O <b>índice geral</b> é a média ponderada: deslizamento 30%, alagamento/inundação 30%, erosão 20% e contaminação 20%. Faixas: Baixo (&lt;35), Moderado (35–49), Alto (50–64) e Muito alto (65+).</p>
+        <p>Para cada distrito somamos pontos: setores de risco ponderados pelo grau (R1=1, R2=2, R3=4, R4=8), ocorrências de 2026, chamados de erosão, porcentagem de área inundável, porcentagem de encostas e áreas contaminadas (contaminada=3, sob investigação=2, em monitoramento=1, reabilitada=0,3). Cada soma é convertida em escala logarítmica de 0 a 100 em relação ao distrito com maior valor. O <b>índice geral</b> é a média ponderada: deslizamento 30%, alagamento e inundação 30%, erosão 20% e contaminação 20%. Faixas: Baixo (abaixo de 35), Moderado (35 a 49), Alto (50 a 64) e Muito alto (65 ou mais).</p>
         <p>O índice é <b>comparativo</b>: mostra quais distritos concentram mais situações de risco, e não a probabilidade de um acidente acontecer.</p>
 
         <h2>Limitações e aviso importante</h2>
         <p class="alerta">Esta ferramenta é <b>informativa e educativa</b>. Ela <b>não substitui</b> vistoria da Defesa Civil, laudo técnico de profissional habilitado nem alertas oficiais. A localização do endereço pode ter imprecisão de dezenas de metros. A ausência de risco mapeado não garante que o local seja seguro. Em caso de perigo, ligue <b>199</b>.</p>
 
         <h2>Créditos</h2>
-        <p>Projeto de Extensão II – CST em Análise e Desenvolvimento de Sistemas.<br>
+        <p>Projeto de Extensão II, CST em Análise e Desenvolvimento de Sistemas.<br>
         Desenvolvimento: <b>João Batista de Gusmão Neto</b>.<br>
         Organização parceira e orientação técnica: <b>Eng.ª Ambiental Amanda Ferreira Gusmão</b> (CREA-SP 5070209182).</p>
         <p>Código-fonte aberto no <a href="https://github.com/amandagusmao/georisco-sp" target="_blank" rel="noopener">GitHub</a>. Contribuições e sugestões são bem-vindas.</p>
@@ -350,10 +417,19 @@
   </main>
 
   <footer class="rodape">
-    <div class="container">
-      <p><b>GeoRisco SP</b> · Informação gratuita para a população de São Paulo · Dados abertos da Prefeitura (GeoSampa)</p>
-      <p class="nota">Ferramenta informativa — não substitui avisos oficiais da Defesa Civil nem laudo técnico. Emergência: 199 · 193 · 192.</p>
+    <div class="rodape-in">
+      <div>
+        <a class="marca" href="#inicio"><img src="assets/favicon.svg" alt="" width="28" height="28"><span>GeoRisco<em>SP</em></span></a>
+        <p class="nota">Informação gratuita para a população de São Paulo, com dados abertos da Prefeitura (GeoSampa).</p>
+      </div>
+      <div class="rodape-emerg">
+        <span>Emergência</span>
+        <a href="tel:199"><b>199</b> Defesa Civil</a>
+        <a href="tel:193"><b>193</b> Bombeiros</a>
+        <a href="tel:192"><b>192</b> SAMU</a>
+      </div>
     </div>
+    <p class="rodape-aviso">Ferramenta informativa. Não substitui avisos oficiais da Defesa Civil nem laudo técnico.</p>
   </footer>
 
   <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>

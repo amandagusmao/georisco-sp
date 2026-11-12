@@ -14,26 +14,26 @@ export async function obterChuva(lat = -23.55, lng = -46.63) {
 }
 
 export function classeChuva(mm) {
-  if (mm >= 50) return { nome: "Muito forte", cor: "#6a1b9a" };
-  if (mm >= 30) return { nome: "Forte", cor: "#d32f2f" };
-  if (mm >= 10) return { nome: "Moderada", cor: "#ef6c00" };
-  if (mm >= 0.5) return { nome: "Fraca", cor: "#29b6f6" };
-  return { nome: "Sem chuva", cor: "#9ccc65" };
+  if (mm >= 50) return { nome: "Muito forte", cor: "#9b1c1c" };
+  if (mm >= 30) return { nome: "Forte", cor: "#dc3c3c" };
+  if (mm >= 10) return { nome: "Moderada", cor: "#e07b24" };
+  if (mm >= 0.5) return { nome: "Fraca", cor: "#22d3ee" };
+  return { nome: "Sem chuva", cor: "#22c55e" };
 }
 
 export function alertaChuva(c) {
   const max48 = Math.max(c.dias[0]?.mm || 0, c.dias[1]?.mm || 0);
   const acum = c.acumulado72h + (c.dias[0]?.mm || 0);
-  if (max48 >= 50 || acum >= 120) return { nivel: 3, cor: "#6a1b9a", titulo: "Alerta: chuva muito forte", texto: "Alto risco de alagamentos, inundações e deslizamentos. Quem mora em encostas ou perto de córregos deve se preparar para sair preventivamente. Acompanhe a Defesa Civil (199)." };
-  if (max48 >= 30 || acum >= 80) return { nivel: 2, cor: "#d32f2f", titulo: "Atenção: chuva forte ou solo encharcado", texto: "Risco de alagamentos e de deslizamentos em encostas. Observe rachaduras, evite áreas alagadas e mantenha documentos em local seguro." };
-  if (max48 >= 10) return { nivel: 1, cor: "#ef6c00", titulo: "Observação: chuva moderada prevista", texto: "Podem ocorrer alagamentos pontuais. Evite jogar lixo na rua e fique atento aos avisos." };
-  return { nivel: 0, cor: "#2e7d32", titulo: "Sem alerta de chuva forte", texto: "Não há previsão de chuva forte nas próximas 48 horas. Aproveite para limpar calhas e verificar a drenagem." };
+  if (max48 >= 50 || acum >= 120) return { nivel: 3, cor: "#9b1c1c", titulo: "Alerta: chuva muito forte", texto: "Alto risco de alagamentos, inundações e deslizamentos. Quem mora em encostas ou perto de córregos deve se preparar para sair preventivamente. Acompanhe a Defesa Civil (199)." };
+  if (max48 >= 30 || acum >= 80) return { nivel: 2, cor: "#dc3c3c", titulo: "Atenção: chuva forte ou solo encharcado", texto: "Risco de alagamentos e de deslizamentos em encostas. Observe rachaduras, evite áreas alagadas e mantenha documentos em local seguro." };
+  if (max48 >= 10) return { nivel: 1, cor: "#e07b24", titulo: "Observação: chuva moderada prevista", texto: "Podem ocorrer alagamentos pontuais. Evite jogar lixo na rua e fique atento aos avisos." };
+  return { nivel: 0, cor: "#22c55e", titulo: "Sem alerta de chuva forte", texto: "Não há previsão de chuva forte nas próximas 48 horas. Aproveite para limpar calhas e verificar a drenagem." };
 }
 
 export function chuvaHTML(c, local = "São Paulo (centro)") {
   const a = alertaChuva(c);
   return `<div class="chuva-alerta" style="--c:${a.cor}"><h2>${a.titulo}</h2><p style="margin:0">${a.texto}</p>
-    <p style="margin:.5em 0 0;opacity:.9;font-size:.92rem">Local: ${esc(local)} · Chuva acumulada nos últimos 3 dias: <b>${c.acumulado72h} mm</b></p></div>
+    <p class="nota" style="margin:.6em 0 0">Local: ${esc(local)} · Chuva acumulada nos últimos 3 dias: <b>${c.acumulado72h} mm</b></p></div>
     <div class="dias">${c.dias.map((d) => {
       const k = classeChuva(d.mm);
       const dt = new Date(d.data + "T12:00:00");

@@ -14,9 +14,9 @@ const NOMES_INDICE = {
 };
 
 export const popups = {
-  geo: (p) => `<h4>${esc(p.nome)}</h4>Risco geológico <b>${p.grau}</b> – ${esc(p.processo)}<br>Setor ${esc(p.setor)} · ${esc(p.distrito)}<br>Moradias no setor: <b>${fmt(p.moradias)}</b><br><small>Vistoria: ${dataBR(p.vistoria)}</small>`,
-  hid: (p) => `<h4>${esc(p.nome)}</h4>Risco hidrológico <b>${p.grau}</b> – ${esc(p.processo)}<br>Bacia: ${esc(p.bacia)} · ${esc(p.distrito)}<br>Moradias no setor: <b>${fmt(p.moradias)}</b><br><small>Vistoria: ${dataBR(p.vistoria)}</small>`,
-  cont: (p) => `<h4>Área ${esc(p.classe.toLowerCase())}</h4>${esc(p.endereco)}<br>Contaminantes: ${esc(p.contaminantes)}<br>Uso anterior: ${esc(p.uso_anterior || "—")}<br><small>Fonte: SVMA/PMSP</small>`,
+  geo: (p) => `<h4>${esc(p.nome)}</h4>Risco geológico <b>${p.grau}</b>, ${esc(p.processo)}<br>Setor ${esc(p.setor)} · ${esc(p.distrito)}<br>Moradias no setor: <b>${fmt(p.moradias)}</b><br><small>Vistoria: ${dataBR(p.vistoria)}</small>`,
+  hid: (p) => `<h4>${esc(p.nome)}</h4>Risco hidrológico <b>${p.grau}</b>, ${esc(p.processo)}<br>Bacia: ${esc(p.bacia)} · ${esc(p.distrito)}<br>Moradias no setor: <b>${fmt(p.moradias)}</b><br><small>Vistoria: ${dataBR(p.vistoria)}</small>`,
+  cont: (p) => `<h4>Área ${esc(p.classe.toLowerCase())}</h4>${esc(p.endereco)}<br>Contaminantes: ${esc(p.contaminantes)}<br>Uso anterior: ${esc(p.uso_anterior || "não informado")}<br><small>Fonte: SVMA/PMSP</small>`,
   oc: (p) => `<h4>${esc(p.tipo)}</h4>Data: ${dataBR(p.data)}${p.local ? `<br>${esc(p.local)}` : ""}<br>${esc(p.distrito)}`,
   carta: (p) => `<h4>Terreno: ${esc(p.tipo)}</h4>${esc(p.explicacao)}<br><small>Unidade ${esc(p.unidade)} · ${esc(p.relevo)} · ${esc(p.rocha)}</small>`,
   inund: () => `<h4>Área inundável</h4>Mancha de inundação para chuva extrema (período de retorno de 100 anos).`,
@@ -26,17 +26,17 @@ export const estilos = {
   geo: (f) => ({ color: COR_GRAU_GEO[f.properties.grau], weight: 1, fillColor: COR_GRAU_GEO[f.properties.grau], fillOpacity: 0.55 }),
   hid: (f) => ({ color: COR_GRAU_HID[f.properties.grau], weight: 1, fillColor: COR_GRAU_HID[f.properties.grau], fillOpacity: 0.5 }),
   cont: (f) => ({ color: COR_CONT[f.properties.classe] || "#555", weight: 1.5, fillColor: COR_CONT[f.properties.classe] || "#555", fillOpacity: 0.6 }),
-  inund: () => ({ color: "#0288d1", weight: 0.5, fillColor: "#4fc3f7", fillOpacity: 0.35 }),
-  carta: (f) => ({ color: "#8d6e63", weight: 0.4, fillColor: COR_SUSC[f.properties.susc], fillOpacity: 0.55 }),
+  inund: () => ({ color: "#0ea5e9", weight: 0.5, fillColor: "#38bdf8", fillOpacity: 0.3 }),
+  carta: (f) => ({ color: "#0b0f0e", weight: 0.4, fillColor: COR_SUSC[f.properties.susc], fillOpacity: 0.55 }),
 };
 
 const CAMADAS = [
-  { id: "geo", nome: "Risco de deslizamento e solapamento", arquivo: "risco_geologico.geojson", cor: "#e53935", ativo: true, pane: "risco" },
-  { id: "hid", nome: "Risco de alagamento e inundação", arquivo: "risco_hidrologico.geojson", cor: "#2171b5", ativo: true, pane: "risco" },
-  { id: "inund", nome: "Área inundável (cheia de 100 anos)", arquivo: "area_inundavel.geojson", cor: "#4fc3f7", ativo: false, pane: "fundo2" },
-  { id: "cont", nome: "Áreas contaminadas", arquivo: "areas_contaminadas.geojson", cor: "#6d1f12", ativo: false, pane: "risco" },
-  { id: "oc", nome: "Ocorrências e chamados (2026)", arquivo: "ocorrencias.geojson", cor: "#c62828", ativo: false, pane: "pontos" },
-  { id: "carta", nome: "Tipo de terreno (carta geotécnica)", arquivo: "carta_geotecnica.geojson", cor: "#e9a86b", ativo: false, pane: "fundo1" },
+  { id: "geo", nome: "Risco de deslizamento e solapamento", arquivo: "risco_geologico.geojson", cor: "#dc3c3c", ativo: true, pane: "risco" },
+  { id: "hid", nome: "Risco de alagamento e inundação", arquivo: "risco_hidrologico.geojson", cor: "#22d3ee", ativo: true, pane: "risco" },
+  { id: "inund", nome: "Área inundável (cheia de 100 anos)", arquivo: "area_inundavel.geojson", cor: "#38bdf8", ativo: false, pane: "fundo2" },
+  { id: "cont", nome: "Áreas contaminadas", arquivo: "areas_contaminadas.geojson", cor: "#c2410c", ativo: false, pane: "risco" },
+  { id: "oc", nome: "Ocorrências e chamados (2026)", arquivo: "ocorrencias.geojson", cor: "#e3c443", ativo: false, pane: "pontos" },
+  { id: "carta", nome: "Tipo de terreno (carta geotécnica)", arquivo: "carta_geotecnica.geojson", cor: "#4d7c0f", ativo: false, pane: "fundo1" },
 ];
 
 function criarPanes(map) {
@@ -54,7 +54,7 @@ function camadaGeoJSON(def, dados, renderers) {
   };
   if (def.id === "oc") {
     opts.pointToLayer = (f, ll) => L.circleMarker(ll, {
-      radius: 5, color: "#fff", weight: 1, fillColor: COR_OCORR[f.properties.tipo], fillOpacity: 0.9,
+      radius: 5, color: "#050807", weight: 1, fillColor: COR_OCORR[f.properties.tipo], fillOpacity: 0.9,
       pane: def.pane, renderer: renderers[def.pane], bubblingMouseEvents: false,
     });
   } else {
@@ -71,6 +71,7 @@ export function mapaPrincipal() { return mapa; }
 export async function iniciarMapa({ onAnalisar, onDistrito }) {
   if (mapa) { setTimeout(() => mapa.invalidateSize(), 50); return mapa; }
   mapa = L.map("mapa-leaflet", { zoomControl: true, minZoom: 9, maxZoom: 19 }).setView(CENTRO, 11);
+  mapa.getContainer().classList.add("mapa-escuro");
   L.tileLayer(BASE_URL, { attribution: BASE_ATTR, maxZoom: 19 }).addTo(mapa);
   criarPanes(mapa);
   const renderers = {};
@@ -141,8 +142,8 @@ async function alternar(id, ligar, renderers) {
 }
 
 function estiloDistrito(f) {
-  if (indiceAtual === "nenhum") return { color: "#37474f", weight: 1, fillOpacity: 0, opacity: 0.6 };
-  return { color: "#455a64", weight: 0.8, opacity: 0.7, fillColor: corIndice(f.properties[indiceAtual]), fillOpacity: 0.45 };
+  if (indiceAtual === "nenhum") return { color: "#6f837a", weight: 1, fillOpacity: 0, opacity: 0.6 };
+  return { color: "#0b0f0e", weight: 1, opacity: 0.9, fillColor: corIndice(f.properties[indiceAtual]), fillOpacity: 0.38 };
 }
 
 function legenda() {
@@ -150,16 +151,16 @@ function legenda() {
   const linha = (cor, txt, borda) => `<div class="linha"><span class="cx" style="background:${cor}${borda ? `;border-color:${borda}` : ""}"></span>${txt}</div>`;
   let h = "";
   if (indiceAtual !== "nenhum") {
-    h += `<h4>Distritos – ${NOMES_INDICE[indiceAtual]}</h4>`;
-    h += [["Baixo", "0–34"], ["Moderado", "35–49"], ["Alto", "50–64"], ["Muito alto", "65–100"]].map(([n, f]) => linha(NIVEL_DISTRITO[n], `${n} (${f})`)).join("");
+    h += `<h4>Distritos: ${NOMES_INDICE[indiceAtual]}</h4>`;
+    h += [["Baixo", "0 a 34"], ["Moderado", "35 a 49"], ["Alto", "50 a 64"], ["Muito alto", "65 a 100"]].map(([n, f]) => linha(NIVEL_DISTRITO[n], `${n} (${f})`)).join("");
   }
   const on = (id) => document.querySelector(`[data-camada="${id}"]`)?.checked;
-  if (on("geo")) h += "<h4>Risco de deslizamento/solapamento</h4>" + Object.entries(COR_GRAU_GEO).map(([g, c]) => linha(c, `${g} – ${{ R1: "baixo", R2: "médio", R3: "alto", R4: "muito alto" }[g]}`)).join("");
-  if (on("hid")) h += "<h4>Risco de alagamento/inundação</h4>" + Object.entries(COR_GRAU_HID).map(([g, c]) => linha(c, `${g} – ${{ R1: "baixo", R2: "médio", R3: "alto", R4: "muito alto" }[g]}`)).join("");
-  if (on("inund")) h += "<h4>Área inundável</h4>" + linha("#4fc3f7", "Cheia de 100 anos");
+  if (on("geo")) h += "<h4>Risco de deslizamento/solapamento</h4>" + Object.entries(COR_GRAU_GEO).map(([g, c]) => linha(c, `${g} (${{ R1: "baixo", R2: "médio", R3: "alto", R4: "muito alto" }[g]})`)).join("");
+  if (on("hid")) h += "<h4>Risco de alagamento/inundação</h4>" + Object.entries(COR_GRAU_HID).map(([g, c]) => linha(c, `${g} (${{ R1: "baixo", R2: "médio", R3: "alto", R4: "muito alto" }[g]})`)).join("");
+  if (on("inund")) h += "<h4>Área inundável</h4>" + linha("#38bdf8", "Cheia de 100 anos");
   if (on("cont")) h += "<h4>Áreas contaminadas</h4>" + Object.entries(COR_CONT).map(([g, c]) => linha(c, g)).join("");
   if (on("oc")) h += "<h4>Ocorrências 2026</h4>" + Object.entries(COR_OCORR).map(([g, c]) => linha(c, g)).join("");
-  if (on("carta")) h += "<h4>Tipo de terreno (suscetibilidade)</h4>" + [[1, "Colinas e terraços – baixa"], [2, "Morrotes – moderada"], [3, "Várzeas / morros baixos – alta"], [4, "Morros altos e serras – muito alta"]].map(([k, t]) => linha(COR_SUSC[k], t)).join("");
+  if (on("carta")) h += "<h4>Tipo de terreno (suscetibilidade)</h4>" + [[1, "Colinas e terraços: baixa"], [2, "Morrotes: moderada"], [3, "Várzeas e morros baixos: alta"], [4, "Morros altos e serras: muito alta"]].map(([k, t]) => linha(COR_SUSC[k], t)).join("");
   el.innerHTML = h || "<p class='nota'>Nenhuma camada ativa.</p>";
 }
 
@@ -180,11 +181,12 @@ let mini;
 export function miniMapa(el, res) {
   mini?.remove();
   mini = L.map(el, { scrollWheelZoom: false }).setView([res.lat, res.lng], 16);
+  mini.getContainer().classList.add("mapa-escuro");
   L.tileLayer(BASE_URL, { attribution: BASE_ATTR, maxZoom: 19 }).addTo(mini);
-  L.circle([res.lat, res.lng], { radius: 300, color: "#0b5d4b", weight: 1, dashArray: "4 4", fill: false, interactive: false }).addTo(mini);
+  L.circle([res.lat, res.lng], { radius: 300, color: "#22c55e", weight: 1, dashArray: "4 4", fill: false, interactive: false }).addTo(mini);
   const add = (lista, id) => lista.forEach((x) => {
     const l = id === "oc"
-      ? L.circleMarker([x.f.geometry.coordinates[1], x.f.geometry.coordinates[0]], { radius: 6, color: "#fff", weight: 1, fillColor: COR_OCORR[x.p.tipo], fillOpacity: 0.9 })
+      ? L.circleMarker([x.f.geometry.coordinates[1], x.f.geometry.coordinates[0]], { radius: 6, color: "#050807", weight: 1, fillColor: COR_OCORR[x.p.tipo], fillOpacity: 0.9 })
       : L.geoJSON(x.f, { style: estilos[id] });
     l.bindPopup(popups[id](x.p)).addTo(mini);
   });

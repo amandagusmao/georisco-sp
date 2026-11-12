@@ -2,7 +2,7 @@
 import { carregar, CAMADAS_ANALISE, NIVEIS, fmt, dataBR } from "./dados.js";
 
 const GRAU_NIVEL = { R1: 1, R2: 2, R3: 3, R4: 4 };
-const GRAU_TXT = { R1: "R1 – baixo", R2: "R2 – médio", R3: "R3 – alto", R4: "R4 – muito alto" };
+const GRAU_TXT = { R1: "R1 (baixo)", R2: "R2 (médio)", R3: "R3 (alto)", R4: "R4 (muito alto)" };
 
 function proximos(feats, lng, lat, raio) {
   const dLat = raio / 111320;
@@ -55,7 +55,7 @@ export async function analisarPonto(lat, lng, endereco) {
   const ondulado = ["Morrote", "Morrote baixo"].includes(relevo);
 
   // ------------------------------------------------ deslizamento
-  const desl = { id: "deslizamento", nome: "Deslizamento de terra", icone: "⛰️", nivel: 0, motivos: [] };
+  const desl = { id: "deslizamento", nome: "Deslizamento de terra", icone: "i-morro", nivel: 0, motivos: [] };
   const geoEsc = geoPerto.filter((x) => /Escorregamento/i.test(x.p.processo));
   for (const x of geoEsc) {
     if (x.d === 0) {
@@ -73,11 +73,11 @@ export async function analisarPonto(lat, lng, endereco) {
   if (nDesl) { desl.nivel = Math.max(desl.nivel, nDesl >= 3 ? 2 : 1); desl.motivos.push(`${nDesl} ocorrência(s) de deslizamento registrada(s) em 2026 num raio de 500 m.`); }
 
   // ------------------------------------------------ alagamento / inundação
-  const alag = { id: "alagamento", nome: "Alagamento e inundação", icone: "🌊", nivel: 0, motivos: [] };
+  const alag = { id: "alagamento", nome: "Alagamento e inundação", icone: "i-agua", nivel: 0, motivos: [] };
   for (const x of hidPerto) {
     if (x.d === 0) {
       alag.nivel = Math.max(alag.nivel, GRAU_NIVEL[x.p.grau]);
-      alag.motivos.push(`Dentro do setor de risco hidrológico ${x.p.setor} (“${x.p.nome}”), grau ${GRAU_TXT[x.p.grau]} – ${x.p.processo.toLowerCase()}.`);
+      alag.motivos.push(`Dentro do setor de risco hidrológico ${x.p.setor} (“${x.p.nome}”), grau ${GRAU_TXT[x.p.grau]}, ${x.p.processo.toLowerCase()}.`);
     } else if (x.d <= 150) {
       const n = GRAU_NIVEL[x.p.grau] >= 3 ? 2 : 1;
       if (n > alag.nivel) alag.nivel = n;
@@ -91,7 +91,7 @@ export async function analisarPonto(lat, lng, endereco) {
   if (nAlag) { alag.nivel = Math.max(alag.nivel, nAlag >= 3 ? 2 : 1); alag.motivos.push(`${nAlag} ocorrência(s) de alagamento/inundação registrada(s) em 2026 num raio de 500 m.`); }
 
   // ------------------------------------------------ erosão / solapamento
-  const eros = { id: "erosao", nome: "Erosão e solapamento", icone: "🕳️", nivel: 0, motivos: [] };
+  const eros = { id: "erosao", nome: "Erosão e solapamento", icone: "i-erosao", nivel: 0, motivos: [] };
   for (const x of geoPerto.filter((y) => /Solapamento/i.test(y.p.processo))) {
     if (x.d === 0) {
       eros.nivel = Math.max(eros.nivel, GRAU_NIVEL[x.p.grau]);
@@ -107,7 +107,7 @@ export async function analisarPonto(lat, lng, endereco) {
   if (nEros) { eros.nivel = Math.max(eros.nivel, 1); eros.motivos.push(`${nEros} chamado(s) de erosão à Prefeitura num raio de 500 m.`); }
 
   // ------------------------------------------------ solo contaminado
-  const cont_ = { id: "contaminacao", nome: "Solo contaminado", icone: "☣️", nivel: 0, motivos: [] };
+  const cont_ = { id: "contaminacao", nome: "Solo contaminado", icone: "i-frasco", nivel: 0, motivos: [] };
   const PESO = { "Contaminada": 4, "Contaminada Sob Investigação": 3, "Em Processo de Monitoramento para Reabilitação": 2, "Reabilitada": 1 };
   for (const x of contPerto) {
     const base = PESO[x.p.classe] || 1;
@@ -139,11 +139,11 @@ export async function analisarPonto(lat, lng, endereco) {
   else if (hidDentro) tipoZona = `Setor de risco hidrológico ${hidDentro.p.grau} (${hidDentro.p.processo.toLowerCase()})`;
   else if (naInundavel) tipoZona = "Zona inundável (várzea de rio)";
   else if (contDentro) tipoZona = "Área contaminada cadastrada";
-  else if (relevo === "Planície de rio") tipoZona = "Zona de várzea – suscetível a inundação";
-  else if (encosta) tipoZona = "Zona de encosta – suscetível a deslizamento";
+  else if (relevo === "Planície de rio") tipoZona = "Zona de várzea, suscetível a inundação";
+  else if (encosta) tipoZona = "Zona de encosta, suscetível a deslizamento";
   else tipoZona = "Fora de setores de risco mapeados";
 
-  const ZONAS = ["Zona Verde", "Zona Amarela", "Zona Laranja", "Zona Vermelha", "Zona Roxa"];
+  const ZONAS = ["Zona Verde", "Zona Amarela", "Zona Laranja", "Zona Vermelha", "Zona Crítica"];
   const FRASE = [
     "Risco baixo: não encontramos situações de risco relevantes perto deste endereço.",
     "Atenção: existem fatores de risco nas proximidades. Fique atento em dias de chuva forte.",
@@ -184,7 +184,7 @@ const DICAS = {
 };
 
 export function resumoTexto(res) {
-  return `${res.zona.nome} (${res.zona.nivelNome}) – ${res.zona.tipo}. Distrito ${res.distrito.nome}.`;
+  return `${res.zona.nome} (${res.zona.nivelNome}): ${res.zona.tipo}. Distrito ${res.distrito.nome}.`;
 }
 
 export { fmt, dataBR };

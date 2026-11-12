@@ -284,14 +284,14 @@ for i, d in enumerate(D):
             if a:
                 areas[props["tipo"]] += a
     tot = sum(areas.values()) or 1
-    stats[i]["terreno_predominante"] = areas.most_common(1)[0][0] if areas else "—"
+    stats[i]["terreno_predominante"] = areas.most_common(1)[0][0] if areas else "não identificado"
     stats[i]["pct_encosta"] = round(100 * sum(v for k, v in areas.items()
                                               if k in ("Morro baixo", "Morro alto", "Serra", "Morrote alto")) / tot, 1)
     stats[i]["pct_planicie"] = round(100 * areas.get("Planície de rio", 0) / tot, 1)
     stats[i]["raw_desl"] += stats[i]["pct_encosta"] * 0.15
     stats[i]["raw_eros"] += stats[i]["pct_encosta"] * 0.1
 
-# --------------------------------------------------------- índices 0–100
+# --------------------------------------------------------- índices de 0 a 100
 def scale(key):
     mx = max(s[key] for s in stats) or 1
     return [round(100 * math.log1p(s[key]) / math.log1p(mx)) for s in stats]

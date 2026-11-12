@@ -18,8 +18,8 @@ function rotulo(item) {
   const a = item.address || {};
   const rua = [a.road, a.house_number].filter(Boolean).join(", ");
   const bairro = a.suburb || a.neighbourhood || a.quarter || a.city_district || "";
-  const partes = [rua || item.name, bairro, "São Paulo - SP"].filter(Boolean);
-  return [...new Set(partes)].join(" – ");
+  const partes = [rua || item.name, bairro, "São Paulo, SP"].filter(Boolean);
+  return [...new Set(partes)].join(", ");
 }
 
 export async function buscarEndereco(texto) {
@@ -56,7 +56,7 @@ async function buscarCEP(cep) {
     const res = await nominatim("search", { ...t, countrycodes: "br", viewbox: VIEWBOX, bounded: 1, addressdetails: 1, limit: 1 });
     if (res.length) {
       const i = res[0];
-      return [{ lat: +i.lat, lng: +i.lon, rotulo: `${[rua, d.bairro].filter(Boolean).join(" – ")} – São Paulo - SP – CEP ${d.cep}`, tipo: "cep" }];
+      return [{ lat: +i.lat, lng: +i.lon, rotulo: `${[rua, d.bairro].filter(Boolean).join(", ")}, São Paulo, SP, CEP ${d.cep}`, tipo: "cep" }];
     }
   }
   throw new Error("Não conseguimos localizar esse CEP no mapa. Tente digitar o endereço com número.");

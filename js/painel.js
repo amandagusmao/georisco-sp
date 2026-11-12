@@ -18,7 +18,8 @@ export async function iniciarPainel() {
   D = res.distritos;
   OC = oc.features.map((x) => x.properties);
   Chart.defaults.font.family = "Inter, system-ui, sans-serif";
-  Chart.defaults.color = "#4b5c58";
+  Chart.defaults.color = "#9fb1a9";
+  Chart.defaults.borderColor = "#1c2a25";
 
   $("f-regiao").innerHTML = `<option value="">Cidade toda</option>` + REGIOES.map((r) => `<option>${r}</option>`).join("");
   $("f-regiao").onchange = (e) => { f.regiao = e.target.value; f.sub = ""; f.distrito = ""; opcoes(); desenhar(); };
@@ -76,16 +77,16 @@ function contexto() {
 
 function kpis(sel) {
   return [
-    { v: soma(sel, "geo_total"), t: "setores de risco de deslizamento/solapamento", c: "#e53935" },
-    { v: soma(sel, "hid_total"), t: "setores de risco de alagamento/inundação", c: "#2171b5" },
-    { v: soma(sel, "moradias_alto"), t: "moradias em setores de risco alto ou muito alto (R3/R4)", c: "#6a1b9a" },
-    { v: soma(sel, "cont_contaminada") + soma(sel, "cont_investigacao") + soma(sel, "cont_monitoramento"), t: "áreas contaminadas ainda não reabilitadas", c: "#6d1f12" },
-    { v: soma(sel, "oc_total") + soma(sel, "sac_erosao"), t: "ocorrências em 2026 e chamados de erosão", c: "#ef6c00" },
+    { v: soma(sel, "geo_total"), t: "setores de risco de deslizamento ou solapamento" },
+    { v: soma(sel, "hid_total"), t: "setores de risco de alagamento ou inundação" },
+    { v: soma(sel, "moradias_alto"), t: "moradias em setores de risco alto ou muito alto (R3 e R4)" },
+    { v: soma(sel, "cont_contaminada") + soma(sel, "cont_investigacao") + soma(sel, "cont_monitoramento"), t: "áreas contaminadas ainda não reabilitadas" },
+    { v: soma(sel, "oc_total") + soma(sel, "sac_erosao"), t: "ocorrências em 2026 e chamados de erosão" },
   ];
 }
 
 export function kpisHTML(lista) {
-  return lista.map((k) => `<div class="kpi" style="--c:${k.c}"><b>${fmt(k.v)}</b><span>${k.t}</span></div>`).join("");
+  return lista.map((k) => `<div class="kpi"><b>${fmt(k.v)}</b><span>${k.t}</span></div>`).join("");
 }
 
 function desenhar() {
@@ -101,18 +102,18 @@ function painelDistrito(sel) {
   if (!f.distrito) { el.hidden = true; return; }
   const d = sel[0];
   const linha = (nome, k) => `<div class="indice-linha"><span>${nome}</span>
-      <span class="trilho" title="Linha preta = média da cidade (${media(D, k)})"><i style="width:${d[k]}%;--c:${corIndice(d[k])}"></i><s style="left:${media(D, k)}%"></s></span><b>${d[k]}</b></div>`;
+      <span class="trilho" title="Linha branca: média da cidade (${media(D, k)})"><i style="width:${d[k]}%;--c:${corIndice(d[k])}"></i><s style="left:${media(D, k)}%"></s></span><b>${d[k]}</b></div>`;
   el.hidden = false;
   el.innerHTML = `<div class="cartao">
     <div class="pd-cab"><div><h2>${esc(d.nome)}</h2><p class="nota">Subprefeitura ${esc(d.subprefeitura)} · Região ${esc(d.regiao)} · ${fmt(d.area_km2)} km² · Terreno predominante: ${esc(d.terreno_predominante)}</p></div>
-    <span class="etiqueta" style="--c:${NIVEL_DISTRITO[d.nivel]};${d.nivel === "Baixo" ? "color:#1b1b1b" : ""}">Risco ${d.nivel.toLowerCase()} · ${d.ranking}º de 96</span></div>
+    <span class="tag-nivel" style="--c:${NIVEL_DISTRITO[d.nivel]}">Risco ${d.nivel.toLowerCase()} · ${d.ranking}º de 96</span></div>
     <div class="grade-2" style="margin-top:12px">
-      <div class="indices">${linha("Índice geral", "idx_geral")}${linha("Deslizamento", "idx_deslizamento")}${linha("Alagamento/inundação", "idx_alagamento")}${linha("Erosão/solapamento", "idx_erosao")}${linha("Solo contaminado", "idx_contaminacao")}
-        <p class="nota">Barras de 0 a 100. A linha preta marca a média dos 96 distritos.</p></div>
+      <div class="indices">${linha("Índice geral", "idx_geral")}${linha("Deslizamento", "idx_deslizamento")}${linha("Alagamento e inundação", "idx_alagamento")}${linha("Erosão e solapamento", "idx_erosao")}${linha("Solo contaminado", "idx_contaminacao")}
+        <p class="nota">Barras de 0 a 100. A linha branca marca a média dos 96 distritos.</p></div>
       <ul class="lista-simples">
         <li><b>${fmt(d.geo_total)}</b> setores de risco geológico (R4: ${d.geo_R4}, R3: ${d.geo_R3}, R2: ${d.geo_R2}, R1: ${d.geo_R1})</li>
         <li><b>${fmt(d.hid_total)}</b> setores de risco hidrológico (R4: ${d.hid_R4}, R3: ${d.hid_R3}, R2: ${d.hid_R2}, R1: ${d.hid_R1})</li>
-        <li><b>${fmt(d.moradias_alto)}</b> moradias em setores de risco alto/muito alto</li>
+        <li><b>${fmt(d.moradias_alto)}</b> moradias em setores de risco alto ou muito alto</li>
         <li><b>${fmt(d.pct_inundavel)}%</b> da área é inundável · <b>${fmt(d.pct_encosta)}%</b> são encostas (morros/serras) · <b>${fmt(d.pct_planicie)}%</b> várzeas</li>
         <li><b>${d.cont_total}</b> áreas contaminadas cadastradas (${d.cont_contaminada} contaminadas, ${d.cont_investigacao} sob investigação, ${d.cont_monitoramento} em monitoramento, ${d.cont_reabilitada} reabilitadas)</li>
         <li><b>${d.oc_total}</b> ocorrências em 2026 (${d.oc_alagamento} alagamentos, ${d.oc_inundacao} inundações, ${d.oc_deslizamento} deslizamentos) e ${d.sac_erosao} chamados de erosão</li>
@@ -137,10 +138,10 @@ function g1(sel) {
     grafico("g1", {
       type: "bar",
       data: {
-        labels: ["R1 – baixo", "R2 – médio", "R3 – alto", "R4 – muito alto"],
+        labels: ["R1 (baixo)", "R2 (médio)", "R3 (alto)", "R4 (muito alto)"],
         datasets: [
-          { label: "Deslizamento/solapamento", data: ["R1", "R2", "R3", "R4"].map((g) => d["geo_" + g]), backgroundColor: "#e53935" },
-          { label: "Alagamento/inundação", data: ["R1", "R2", "R3", "R4"].map((g) => d["hid_" + g]), backgroundColor: "#2171b5" },
+          { label: "Deslizamento e solapamento", data: ["R1", "R2", "R3", "R4"].map((g) => d["geo_" + g]), backgroundColor: "#22c55e" },
+          { label: "Alagamento e inundação", data: ["R1", "R2", "R3", "R4"].map((g) => d["hid_" + g]), backgroundColor: "#22d3ee" },
         ],
       },
       options: { scales: { y: { beginAtZero: true, ticks: { precision: 0 } } } },
@@ -169,7 +170,7 @@ function g1(sel) {
 function g2(sel) {
   if (f.distrito) {
     const d = sel[0];
-    $("t-g2").textContent = "Índices do distrito × média da cidade";
+    $("t-g2").textContent = "Índices do distrito e média da cidade";
     const ks = ["idx_geral", "idx_deslizamento", "idx_alagamento", "idx_erosao", "idx_contaminacao"];
     grafico("g2", {
       type: "bar",
@@ -177,7 +178,7 @@ function g2(sel) {
         labels: ["Geral", "Deslizamento", "Alagamento", "Erosão", "Contaminação"],
         datasets: [
           { label: d.nome, data: ks.map((k) => d[k]), backgroundColor: ks.map((k) => corIndice(d[k])) },
-          { label: "Média da cidade", data: ks.map((k) => media(D, k)), backgroundColor: "#b0bec5" },
+          { label: "Média da cidade", data: ks.map((k) => media(D, k)), backgroundColor: "#3a4d45" },
         ],
       },
       options: { scales: { y: { min: 0, max: 100 } } },
@@ -188,7 +189,7 @@ function g2(sel) {
   $("t-g2").textContent = `Distritos com maior índice de risco (${rotuloSelecao()})`;
   grafico("g2", {
     type: "bar",
-    data: { labels: top.map((d) => d.nome), datasets: [{ label: "Índice geral (0–100)", data: top.map((d) => d.idx_geral), backgroundColor: top.map((d) => corIndice(d.idx_geral)) }] },
+    data: { labels: top.map((d) => d.nome), datasets: [{ label: "Índice geral (0 a 100)", data: top.map((d) => d.idx_geral), backgroundColor: top.map((d) => corIndice(d.idx_geral)) }] },
     options: { indexAxis: "y", scales: { x: { min: 0, max: 100 } }, plugins: { legend: { display: false } } },
   });
 }
@@ -217,7 +218,7 @@ function g4(sel) {
   const rot = { "Contaminada Sob Investigação": "Sob investigação", "Em Processo de Monitoramento para Reabilitação": "Em monitoramento" };
   grafico("g4", {
     type: "doughnut",
-    data: { labels: cls.map(([c]) => rot[c] || c), datasets: [{ data: cls.map(([, k]) => soma(sel, k)), backgroundColor: cls.map(([c]) => COR_CONT[c]), borderWidth: 2 }] },
+    data: { labels: cls.map(([c]) => rot[c] || c), datasets: [{ data: cls.map(([, k]) => soma(sel, k)), backgroundColor: cls.map(([c]) => COR_CONT[c]), borderWidth: 2, borderColor: "#0f1715" }] },
     options: { plugins: { legend: { position: "right" } }, cutout: "55%" },
   });
 }
@@ -236,9 +237,9 @@ function tabela() {
     th.classList.toggle("desc", th.dataset.ord === k && !ord.asc);
   });
   const barra = (v) => `<span class="barra-idx"><i style="width:${Math.max(4, v * 0.6)}px;--c:${corIndice(v)}"></i>${v}</span>`;
-  $("tabela-distritos").querySelector("tbody").innerHTML = sel.map((d) => `<tr data-id="${d.id}" ${d.id === f.distrito ? 'style="background:#e3f2ed"' : ""} tabindex="0">
-    <td>${d.ranking}</td><td><b>${esc(d.nome)}</b><br><small class="nota">${esc(d.subprefeitura)}</small></td><td>${d.regiao}</td>
-    <td><span class="etiqueta" style="--c:${corIndice(d.idx_geral)};${d.idx_geral < 50 ? "color:#1b1b1b" : ""}">${d.idx_geral} · ${d.nivel}</span></td>
+  $("tabela-distritos").querySelector("tbody").innerHTML = sel.map((d) => `<tr data-id="${d.id}" class="${d.id === f.distrito ? "sel" : ""}" tabindex="0">
+    <td>${d.ranking}</td><td><b>${esc(d.nome)}</b><br><small>${esc(d.subprefeitura)}</small></td><td>${d.regiao}</td>
+    <td><span class="tag-nivel" style="--c:${corIndice(d.idx_geral)}">${d.idx_geral} · ${d.nivel}</span></td>
     <td>${barra(d.idx_deslizamento)}</td><td>${barra(d.idx_alagamento)}</td><td>${barra(d.idx_erosao)}</td><td>${barra(d.idx_contaminacao)}</td>
     <td>${fmt(d.moradias_alto)}</td></tr>`).join("") || `<tr><td colspan="9">Nenhum distrito encontrado.</td></tr>`;
 }

@@ -1,7 +1,9 @@
 // Exportação para Excel (SheetJS) e PDF (jsPDF + autoTable).
 import { fmt, dataBR, NIVEIS } from "./dados.js";
 
-const VERDE = [11, 93, 75];
+const VERDE = [6, 78, 59];
+const VERDE_VIVO = [34, 197, 94];
+const PRETO = [5, 8, 7];
 const hoje = () => new Date().toLocaleDateString("pt-BR");
 const agora = () => new Date().toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" });
 const nomeArquivo = (s) => s.normalize("NFD").replace(/\p{Diacritic}/gu, "").replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "").toLowerCase().slice(0, 50);
@@ -38,17 +40,17 @@ function folhaKV(pares) {
 }
 
 const FONTES = [
-  ["Fontes", "GeoSampa – Prefeitura de São Paulo (áreas de risco geológico e hidrológico, área inundável, áreas contaminadas SVMA, ocorrências Defesa Civil/SIGRC, chamados SP156, Carta Geotécnica, distritos)."],
+  ["Fontes", "GeoSampa, Prefeitura de São Paulo (áreas de risco geológico e hidrológico, área inundável, áreas contaminadas SVMA, ocorrências Defesa Civil/SIGRC, chamados SP156, Carta Geotécnica, distritos)."],
   ["Aviso", "Ferramenta informativa. Não substitui vistoria da Defesa Civil, laudo técnico ou alertas oficiais. Emergência: Defesa Civil 199, Bombeiros 193, SAMU 192."],
-  ["Gerado por", "GeoRisco SP – https://amandagusmao.github.io/georisco-sp/"],
+  ["Gerado por", "GeoRisco SP, https://amandagusmao.github.io/georisco-sp/"],
 ];
 
 // ===================================================== endereço
 function linhasProximidades(res) {
   const out = [];
-  res.perto.geo.forEach((x) => out.push(["Risco geológico", `${x.p.nome} (setor ${x.p.setor})`, `${x.p.grau} – ${x.p.processo}`, x.d]));
-  res.perto.hid.forEach((x) => out.push(["Risco hidrológico", `${x.p.nome} (setor ${x.p.setor})`, `${x.p.grau} – ${x.p.processo}`, x.d]));
-  res.perto.cont.forEach((x) => out.push(["Área contaminada", x.p.endereco, `${x.p.classe} – ${x.p.contaminantes}`, x.d]));
+  res.perto.geo.forEach((x) => out.push(["Risco geológico", `${x.p.nome} (setor ${x.p.setor})`, `${x.p.grau}, ${x.p.processo}`, x.d]));
+  res.perto.hid.forEach((x) => out.push(["Risco hidrológico", `${x.p.nome} (setor ${x.p.setor})`, `${x.p.grau}, ${x.p.processo}`, x.d]));
+  res.perto.cont.forEach((x) => out.push(["Área contaminada", x.p.endereco, `${x.p.classe}: ${x.p.contaminantes}`, x.d]));
   res.perto.oc.forEach((x) => out.push([`Ocorrência: ${x.p.tipo}`, x.p.local || x.p.distrito, dataBR(x.p.data), x.d]));
   return out.sort((a, b) => a[3] - b[3]);
 }
@@ -57,16 +59,16 @@ export function exportarEnderecoXLSX(res) {
   const wb = XLSX.utils.book_new();
   const d = res.distrito;
   XLSX.utils.book_append_sheet(wb, folhaKV([
-    ["GeoRisco SP – Relatório do endereço", ""],
+    ["GeoRisco SP: relatório do endereço", ""],
     ["Data da consulta", agora()],
     ["Endereço", res.endereco || "Ponto selecionado no mapa"],
     ["Coordenadas (lat, long)", `${res.lat.toFixed(6)}, ${res.lng.toFixed(6)}`],
     ["Distrito", d.nome], ["Subprefeitura", d.subprefeitura], ["Região", d.regiao],
-    ["Zona", `${res.zona.nome} – risco ${res.zona.nivelNome.toLowerCase()}`],
+    ["Zona", `${res.zona.nome}, risco ${res.zona.nivelNome.toLowerCase()}`],
     ["Tipo de zona", res.zona.tipo],
     ["Resumo", res.zona.frase],
-    ["Tipo de terreno", res.terreno ? `${res.terreno.tipo} – ${res.terreno.explicacao}` : "—"],
-    ["Aptidão geotécnica (Carta da Prefeitura)", res.terreno?.aptidao || "—"],
+    ["Tipo de terreno", res.terreno ? `${res.terreno.tipo}. ${res.terreno.explicacao}` : "não informado"],
+    ["Aptidão geotécnica (Carta da Prefeitura)", res.terreno?.aptidao || "não informado"],
     ["Área inundável (100 anos)?", res.naInundavel ? "Sim" : "Não"],
     [], ...FONTES,
   ]), "Resumo");
@@ -75,18 +77,27 @@ export function exportarEnderecoXLSX(res) {
     "Por quê": r.motivos.join(" | "), "O que fazer": r.dicas.join(" | "),
   })), [26, 12, 12, 90, 90]), "Riscos");
   const prox = linhasProximidades(res).map(([t, n, c, dist]) => ({ "Tipo": t, "Nome / local": n, "Grau / classe / data": c, "Distância (m)": dist }));
-  XLSX.utils.book_append_sheet(wb, folha(prox.length ? prox : [{ "Tipo": "Nenhum item de risco num raio de 300–500 m" }], [24, 60, 50, 14]), "Proximidades");
+  XLSX.utils.book_append_sheet(wb, folha(prox.length ? prox : [{ "Tipo": "Nenhum item de risco num raio de 300 a 500 m" }], [24, 60, 50, 14]), "Proximidades");
   XLSX.utils.book_append_sheet(wb, folha([linhaDistrito(d)]), "Distrito");
   XLSX.writeFile(wb, `georisco-sp-${nomeArquivo(res.endereco || d.nome)}.xlsx`);
 }
 
 function cabecalhoPDF(doc, titulo, subtitulo) {
   const W = doc.internal.pageSize.getWidth();
-  doc.setFillColor(...VERDE);
+  doc.setFillColor(...PRETO);
   doc.rect(0, 0, W, 24, "F");
+  // faixa em degradê verde
+  for (let i = 0; i < 60; i++) {
+    const t = i / 59;
+    doc.setFillColor(Math.round(34 + (6 - 34) * t), Math.round(197 + (95 - 197) * t), Math.round(94 + (70 - 94) * t));
+    doc.rect((W / 60) * i, 24, W / 60 + 0.3, 1.6, "F");
+  }
   doc.setTextColor(255);
   doc.setFont("helvetica", "bold"); doc.setFontSize(15);
-  doc.text("GeoRisco SP", 12, 10);
+  doc.text("GeoRisco", 12, 10);
+  doc.setTextColor(...VERDE_VIVO);
+  doc.text("SP", 12 + doc.getTextWidth("GeoRisco "), 10);
+  doc.setTextColor(255);
   doc.setFont("helvetica", "normal"); doc.setFontSize(10);
   doc.text(titulo, 12, 17);
   doc.text(subtitulo, W - 12, 17, { align: "right" });
@@ -101,7 +112,7 @@ function rodapePDF(doc) {
     doc.setPage(i);
     doc.setFont("helvetica", "normal");
     doc.setFontSize(7.5); doc.setTextColor(110);
-    doc.text("Ferramenta informativa – não substitui vistoria da Defesa Civil, laudo técnico ou alertas oficiais. Emergência: 199 Defesa Civil · 193 Bombeiros · 192 SAMU.", 12, H - 9);
+    doc.text("Ferramenta informativa. Não substitui vistoria da Defesa Civil, laudo técnico ou alertas oficiais. Emergência: 199 Defesa Civil · 193 Bombeiros · 192 SAMU.", 12, H - 9);
     doc.text(`Dados: GeoSampa/Prefeitura de São Paulo · amandagusmao.github.io/georisco-sp · Página ${i} de ${n}`, 12, H - 5);
   }
 }
@@ -139,7 +150,7 @@ export function exportarEnderecoPDF(res) {
   doc.roundedRect(12, y, L, hCaixa, 3, 3, "F");
   doc.setTextColor(255);
   doc.setFont("helvetica", "bold"); doc.setFontSize(16);
-  doc.text(`${res.zona.nome} – risco ${res.zona.nivelNome.toLowerCase()}`, 17, y + 9);
+  doc.text(`${res.zona.nome}, risco ${res.zona.nivelNome.toLowerCase()}`, 17, y + 9);
   doc.setFont("helvetica", "normal"); doc.setFontSize(10.5);
   doc.text(doc.splitTextToSize(`Tipo de zona: ${res.zona.tipo}`, L - 10)[0], 17, y + 15.5);
   doc.text(caixaTxt, 17, y + 21.5);
@@ -190,7 +201,7 @@ export function exportarEnderecoPDF(res) {
   doc.autoTable({
     startY: y + 2,
     head: [["Tipo", "Nome / local", "Grau / classe / data", "Distância"]],
-    body: prox.length ? prox.map(([t, n, c, dist]) => [t, n, c, dist === 0 ? "no local" : `${dist} m`]) : [["—", "Nenhum item de risco encontrado nas proximidades", "", ""]],
+    body: prox.length ? prox.map(([t, n, c, dist]) => [t, n, c, dist === 0 ? "no local" : `${dist} m`]) : [["", "Nenhum item de risco encontrado nas proximidades", "", ""]],
     styles: { fontSize: 8, cellPadding: 1.8 },
     headStyles: { fillColor: VERDE },
     columnStyles: { 3: { halign: "right", cellWidth: 20 } },
@@ -203,7 +214,7 @@ export function exportarEnderecoPDF(res) {
   doc.autoTable({
     startY: y + 2,
     body: [
-      ["Índice geral de risco (0–100)", `${d.idx_geral} – ${d.nivel} (${d.ranking}º de 96 distritos)`],
+      ["Índice geral de risco (0 a 100)", `${d.idx_geral}, ${d.nivel} (${d.ranking}º de 96 distritos)`],
       ["Setores de risco geológico", `${d.geo_total} (R4: ${d.geo_R4} · R3: ${d.geo_R3} · R2: ${d.geo_R2} · R1: ${d.geo_R1})`],
       ["Setores de risco hidrológico", `${d.hid_total} (R4: ${d.hid_R4} · R3: ${d.hid_R3} · R2: ${d.hid_R2} · R1: ${d.hid_R1})`],
       ["Moradias em setores R3/R4", fmt(d.moradias_alto)],
@@ -227,7 +238,7 @@ export function exportarEnderecoPDF(res) {
 export function exportarPainelXLSX(ctx) {
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, folhaKV([
-    ["GeoRisco SP – Painel de riscos", ""],
+    ["GeoRisco SP: painel de riscos", ""],
     ["Seleção", ctx.rotulo], ["Gerado em", agora()], ["Distritos na seleção", ctx.sel.length],
     ...ctx.kpis.map((k) => [k.t.charAt(0).toUpperCase() + k.t.slice(1), k.v]),
     [], ...FONTES,
@@ -256,7 +267,7 @@ export function exportarPainelPDF(ctx, graficos) {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF({ unit: "mm", format: "a4" });
   const W = doc.internal.pageSize.getWidth(), L = W - 24;
-  let y = cabecalhoPDF(doc, `Painel de riscos – ${ctx.rotulo}`, `Gerado em ${hoje()}`);
+  let y = cabecalhoPDF(doc, `Painel de riscos: ${ctx.rotulo}`, `Gerado em ${hoje()}`);
   doc.setFont("helvetica", "bold"); doc.setFontSize(14);
   doc.text(ctx.rotulo, 12, y); y += 4;
   doc.autoTable({

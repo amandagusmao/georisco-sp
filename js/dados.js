@@ -23,15 +23,15 @@ export const CAMADAS_ANALISE = [
 ];
 
 export const NIVEIS = [
-  { n: 0, nome: "Baixo", cor: "#2e7d32", clara: false },
-  { n: 1, nome: "Atenção", cor: "#f9a825", clara: true },
-  { n: 2, nome: "Médio", cor: "#ef6c00", clara: false },
-  { n: 3, nome: "Alto", cor: "#d32f2f", clara: false },
-  { n: 4, nome: "Muito alto", cor: "#6a1b9a", clara: false },
+  { n: 0, nome: "Baixo", cor: "#22c55e", clara: true },
+  { n: 1, nome: "Atenção", cor: "#d4b106", clara: true },
+  { n: 2, nome: "Médio", cor: "#e07b24", clara: false },
+  { n: 3, nome: "Alto", cor: "#dc3c3c", clara: false },
+  { n: 4, nome: "Muito alto", cor: "#9b1c1c", clara: false },
 ];
 
 export const NIVEL_DISTRITO = {
-  "Baixo": "#ffd966", "Moderado": "#f6a04d", "Alto": "#e3572b", "Muito alto": "#9e1b1b",
+  "Baixo": "#16a34a", "Moderado": "#c9a227", "Alto": "#d9642a", "Muito alto": "#c0392b",
 };
 export function corIndice(v) {
   return v >= 65 ? NIVEL_DISTRITO["Muito alto"] : v >= 50 ? NIVEL_DISTRITO["Alto"]
@@ -41,22 +41,24 @@ export function nivelIndice(v) {
   return v >= 65 ? "Muito alto" : v >= 50 ? "Alto" : v >= 35 ? "Moderado" : "Baixo";
 }
 
-export const COR_GRAU_GEO = { R1: "#fdd835", R2: "#fb8c00", R3: "#e53935", R4: "#8e24aa" };
-export const COR_GRAU_HID = { R1: "#9ecae1", R2: "#4292c6", R3: "#2171b5", R4: "#08306b" };
+export const COR_GRAU_GEO = { R1: "#e3c443", R2: "#e07b24", R3: "#dc3c3c", R4: "#a51d1d" };
+export const COR_GRAU_HID = { R1: "#a5f3fc", R2: "#22d3ee", R3: "#0891b2", R4: "#155e75" };
 export const COR_CONT = {
-  "Contaminada": "#6d1f12", "Contaminada Sob Investigação": "#b5562b",
-  "Em Processo de Monitoramento para Reabilitação": "#c79a3a", "Reabilitada": "#7f8c8d",
+  "Contaminada": "#c2410c", "Contaminada Sob Investigação": "#d9a441",
+  "Em Processo de Monitoramento para Reabilitação": "#a8a29e", "Reabilitada": "#57534e",
 };
-export const COR_OCORR = { "Alagamento": "#29b6f6", "Inundação": "#1565c0", "Deslizamento": "#c62828", "Erosão (chamado)": "#795548" };
-export const COR_SUSC = { 1: "#d9f0d3", 2: "#f3e2a9", 3: "#e9a86b", 4: "#b5654a" };
+export const COR_OCORR = { "Alagamento": "#67e8f9", "Inundação": "#0891b2", "Deslizamento": "#dc3c3c", "Erosão (chamado)": "#a8a29e" };
+export const COR_SUSC = { 1: "#14532d", 2: "#4d7c0f", 3: "#a16207", 4: "#9a3412" };
 
 export const fmt = (n) => Number(n || 0).toLocaleString("pt-BR");
 export const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 export function dataBR(iso) {
-  if (!iso) return "—";
+  if (!iso) return "não informada";
   const [a, m, d] = iso.slice(0, 10).split("-");
   return `${d}/${m}/${a}`;
 }
+
+export const icone = (id, cls = "ic") => `<svg class="${cls}" aria-hidden="true"><use href="#${id}"/></svg>`;
 
 export function toast(msg, ms = 4000) {
   const t = document.getElementById("toast");
