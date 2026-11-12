@@ -18,8 +18,8 @@ export function carregar(nome) {
 
 export const CAMADAS_ANALISE = [
   "distritos.geojson", "risco_geologico.geojson", "risco_hidrologico.geojson",
-  "areas_contaminadas.geojson", "ocorrencias.geojson", "area_inundavel.geojson",
-  "carta_geotecnica.geojson",
+  "areas_contaminadas.geojson", "ocorrencias.geojson", "carta_geotecnica.geojson",
+  "drenagem.geojson", "aterros.geojson",
 ];
 
 export const NIVEIS = [
@@ -47,7 +47,7 @@ export const COR_CONT = {
   "Contaminada": "#c2410c", "Contaminada Sob Investigação": "#d9a441",
   "Em Processo de Monitoramento para Reabilitação": "#a8a29e", "Reabilitada": "#57534e",
 };
-export const COR_OCORR = { "Alagamento": "#67e8f9", "Inundação": "#0891b2", "Deslizamento": "#dc3c3c", "Erosão (chamado)": "#a8a29e" };
+export const COR_OCORR = { "Alagamento": "#67e8f9", "Inundação": "#0891b2", "Deslizamento": "#dc3c3c", "Erosão (chamado)": "#a8a29e", "Queda de árvore": "#84cc16" };
 export const COR_SUSC = { 1: "#14532d", 2: "#4d7c0f", 3: "#a16207", 4: "#9a3412" };
 
 export const fmt = (n) => Number(n || 0).toLocaleString("pt-BR");
@@ -67,3 +67,7 @@ export function toast(msg, ms = 4000) {
   clearTimeout(toast._t);
   toast._t = setTimeout(() => (t.hidden = true), ms);
 }
+
+export const COR_INUND = { 1: "#1d4ed8", 2: "#3b82f6", 3: "#93c5fd" };
+export const COR_DREN = { "Em operação": "#22c55e", "Planejada": "#a3e635", "Planejado": "#a3e635" };
+export const COR_ATERRO = { "Ativo": "#f59e0b", "Desativado": "#b45309" };

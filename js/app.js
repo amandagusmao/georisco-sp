@@ -1,7 +1,7 @@
 // GeoRisco SP: controle das páginas, busca e resultado da consulta.
 import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js";
 import { buscarEndereco, enderecoDoPonto } from "./geocode.js";
-import { analisarPonto, preCarregar } from "./analise.js";
+import { analisarPonto, preCarregar, INUND_TXT, DECL_TXT } from "./analise.js";
 import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js";
 import { iniciarPainel, selecionarDistrito, kpisHTML } from "./painel.js";
 import { iniciarChuva, obterChuva, chuvaHTML } from "./chuva.js";
@@ -185,10 +185,31 @@ function renderizar(res) {
         <li><b>${d.hid_total}</b> setores de risco de alagamento ou inundação (${d.hid_R3 + d.hid_R4} de grau alto ou muito alto)</li>
         <li><b>${fmt(d.moradias_alto)}</b> moradias em setores de risco alto ou muito alto</li>
         <li><b>${d.cont_total}</b> áreas contaminadas cadastradas</li>
-        <li><b>${d.oc_total}</b> ocorrências registradas em 2026</li>
+        <li><b>${d.oc_total}</b> ocorrências de alagamento, inundação e deslizamento em 2026</li>
+        <li><b>${fmt(d.pct_vulneravel)}%</b> da população em alta ou muito alta vulnerabilidade social (IPVS, Censo 2022)</li>
       </ul>
       <h3 style="margin-top:16px">Histórico num raio de 500 m (2026)</h3>
-      <p class="nota">${Object.keys(ocs).length ? Object.entries(ocs).map(([t, n]) => `${n} ${esc(t.toLowerCase())}`).join(" · ") : "Nenhuma ocorrência registrada."}</p>
+      <p class="nota">${Object.keys(ocs).length ? Object.entries(ocs).map(([t, n]) => `${n} ${esc(t.toLowerCase())}`).join(" · ") : "Nenhuma ocorrência de alagamento, inundação ou deslizamento."}${res.quedasArvore ? ` · ${res.quedasArvore} queda(s) de árvore` : ""}</p>
+      ${d.sede_endereco ? `<h3 style="margin-top:16px">Atendimento: Subprefeitura ${esc(d.subprefeitura)}</h3>
+      <p class="nota">${esc(d.sede_endereco)}<br>Telefone <b>${esc(d.sede_telefone)}</b> · ${esc(d.sede_horario)}<br>Também pelo telefone 156 ou pelo portal SP156.</p>` : ""}
+    </div>
+  </div>
+
+  <div class="grade-2">
+    <div class="cartao">
+      <h3>${icone("i-agua")}Água e terreno no local</h3>
+      <ul class="lista-simples">
+        <li><span class="dist">Inundação</span>${res.ras.inund ? `Dentro da mancha de inundação: pode alagar ${esc(INUND_TXT[res.ras.inund])}.` : res.ras.inundPerto ? `Fora da mancha, mas a menos de 30 m de área que alaga ${esc(INUND_TXT[res.ras.inundPerto])}.` : "Fora das manchas de inundação mapeadas pela Prefeitura."}</li>
+        <li><span class="dist">Inclinação</span>${res.ras.decl ? `Terreno ${esc(DECL_TXT[res.ras.decl])}${res.ras.decl >= 3 ? ". Acima de 30%, a Lei 6.766/79 restringe novos loteamentos." : "."}` : "Sem dado de declividade para o ponto."}</li>
+        <li><span class="dist">Terreno</span>${res.terreno ? `${esc(res.terreno.tipo)}. ${esc(res.terreno.explicacao)}` : "Sem dado da Carta Geotécnica para o ponto."}</li>
+        <li><span class="dist">Aterros</span>${res.perto.aterros.length ? res.perto.aterros.map((x) => `${esc(x.p.tipo)} ${x.p.situacao === "Desativado" ? "desativado" : "em operação"} “${esc(x.p.nome)}” a ${fmt(x.d)} m`).join("; ") + "." : "Nenhum aterro sanitário ou de entulho cadastrado num raio de 1 km."}</li>
+      </ul>
+    </div>
+    <div class="cartao">
+      <h3>${icone("i-rio")}Obras contra enchente por perto</h3>
+      ${res.perto.dren.length ? `<ul class="lista-simples">${res.perto.dren.slice(0, 6).map((x) => `<li><span class="dist">${x.d === 0 ? "No local" : fmt(x.d) + " m"}</span><span class="tag-nivel" style="--c:${x.p.situacao === "Em operação" ? "#22c55e" : "#a3e635"}">${esc(x.p.situacao)}</span> ${esc(x.p.nome)}<br><small class="nota">${esc([x.p.tipo, x.p.detalhe].filter(Boolean).join(", "))}</small></li>`).join("")}</ul>`
+        : `<p class="nota">Nenhum piscinão em operação nem obra de drenagem planejada num raio de 1,5 km.</p>`}
+      <p class="nota">Fontes: reservatórios de amortecimento, Plano Diretor de Drenagem e obras planejadas da Prefeitura.</p>
     </div>
   </div>
 

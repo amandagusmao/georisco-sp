@@ -1,5 +1,6 @@
 // Exportação para Excel (SheetJS) e PDF (jsPDF + autoTable).
 import { fmt, dataBR, NIVEIS } from "./dados.js";
+import { INUND_TXT, DECL_TXT } from "./analise.js";
 
 const VERDE = [6, 78, 59];
 const VERDE_VIVO = [34, 197, 94];
@@ -20,6 +21,10 @@ export const COLUNAS = [
   ["pct_inundavel", "% área inundável"], ["pct_encosta", "% encostas (morros/serras)"], ["pct_planicie", "% várzeas"], ["terreno_predominante", "Terreno predominante"],
   ["cont_total", "Áreas contaminadas (total)"], ["cont_contaminada", "Contaminadas"], ["cont_investigacao", "Sob investigação"], ["cont_monitoramento", "Em monitoramento"], ["cont_reabilitada", "Reabilitadas"],
   ["oc_total", "Ocorrências 2026 (total)"], ["oc_alagamento", "Alagamentos 2026"], ["oc_inundacao", "Inundações 2026"], ["oc_deslizamento", "Deslizamentos 2026"], ["sac_erosao", "Chamados de erosão"],
+  ["oc_queda_arvore", "Quedas de árvore 2026"], ["pct_alaga_5", "% área que alaga a cada 5 anos"], ["pct_inundavel", "% área que alaga a cada 100 anos"],
+  ["pct_declive_25", "% área com inclinação acima de 25%"], ["dren_existente", "Piscinões em operação"], ["dren_planejada", "Obras de drenagem planejadas"],
+  ["populacao", "População (Censo 2022)"], ["pop_vulneravel", "População em alta vulnerabilidade"], ["pct_vulneravel", "% população em alta vulnerabilidade"],
+  ["sede_endereco", "Sede da subprefeitura"], ["sede_telefone", "Telefone da subprefeitura"],
 ];
 
 function linhaDistrito(d) {
@@ -52,6 +57,8 @@ function linhasProximidades(res) {
   res.perto.hid.forEach((x) => out.push(["Risco hidrológico", `${x.p.nome} (setor ${x.p.setor})`, `${x.p.grau}, ${x.p.processo}`, x.d]));
   res.perto.cont.forEach((x) => out.push(["Área contaminada", x.p.endereco, `${x.p.classe}: ${x.p.contaminantes}`, x.d]));
   res.perto.oc.forEach((x) => out.push([`Ocorrência: ${x.p.tipo}`, x.p.local || x.p.distrito, dataBR(x.p.data), x.d]));
+  res.perto.aterros.forEach((x) => out.push([x.p.tipo, `${x.p.nome} (${x.p.endereco})`, x.p.situacao === "Desativado" ? "Desativado" : "Em operação", x.d]));
+  res.perto.dren.slice(0, 8).forEach((x) => out.push(["Obra de drenagem", x.p.nome, `${x.p.situacao}, ${x.p.tipo}`, x.d]));
   return out.sort((a, b) => a[3] - b[3]);
 }
 
@@ -69,7 +76,10 @@ export function exportarEnderecoXLSX(res) {
     ["Resumo", res.zona.frase],
     ["Tipo de terreno", res.terreno ? `${res.terreno.tipo}. ${res.terreno.explicacao}` : "não informado"],
     ["Aptidão geotécnica (Carta da Prefeitura)", res.terreno?.aptidao || "não informado"],
-    ["Área inundável (100 anos)?", res.naInundavel ? "Sim" : "Não"],
+    ["Mancha de inundação", res.ras.inund ? `Sim: pode alagar ${INUND_TXT[res.ras.inund]}` : res.ras.inundPerto ? `A menos de 30 m de área que alaga ${INUND_TXT[res.ras.inundPerto]}` : "Fora das manchas mapeadas"],
+    ["Inclinação do terreno", res.ras.decl ? `Terreno ${DECL_TXT[res.ras.decl]}` : "sem dado"],
+    ["Quedas de árvore em 2026 (500 m)", res.quedasArvore],
+    ["Atendimento", d.sede_endereco ? `Subprefeitura ${d.subprefeitura}: ${d.sede_endereco}, telefone ${d.sede_telefone}, ${d.sede_horario}` : "SP156: telefone 156"],
     [], ...FONTES,
   ]), "Resumo");
   XLSX.utils.book_append_sheet(wb, folha(res.riscos.map((r) => ({
@@ -219,7 +229,10 @@ export function exportarEnderecoPDF(res) {
       ["Setores de risco hidrológico", `${d.hid_total} (R4: ${d.hid_R4} · R3: ${d.hid_R3} · R2: ${d.hid_R2} · R1: ${d.hid_R1})`],
       ["Moradias em setores R3/R4", fmt(d.moradias_alto)],
       ["Áreas contaminadas cadastradas", `${d.cont_total} (${d.cont_contaminada} contaminadas, ${d.cont_investigacao} sob investigação, ${d.cont_monitoramento} em monitoramento, ${d.cont_reabilitada} reabilitadas)`],
-      ["Ocorrências em 2026", `${d.oc_total} (${d.oc_alagamento} alagamentos, ${d.oc_inundacao} inundações, ${d.oc_deslizamento} deslizamentos)`],
+      ["Ocorrências em 2026", `${d.oc_total} (${d.oc_alagamento} alagamentos, ${d.oc_inundacao} inundações, ${d.oc_deslizamento} deslizamentos) e ${d.oc_queda_arvore} quedas de árvore`],
+      ["Drenagem", `${d.dren_existente} piscinões em operação e ${d.dren_planejada} obras planejadas`],
+      ["Vulnerabilidade social", `${fmt(d.pct_vulneravel)}% da população em alta ou muito alta vulnerabilidade (IPVS, Censo 2022)`],
+      ["Subprefeitura", d.sede_endereco ? `${d.subprefeitura}: ${d.sede_endereco}, telefone ${d.sede_telefone}` : d.subprefeitura],
     ],
     styles: { fontSize: 9, cellPadding: 2 }, theme: "striped",
     columnStyles: { 0: { cellWidth: 62, fontStyle: "bold" } }, margin: { left: 12, right: 12 },
@@ -254,7 +267,9 @@ export function exportarPainelXLSX(ctx) {
       "Setores geológicos": s("geo_total"), "Geológico R3+R4": s("geo_R3") + s("geo_R4"),
       "Setores hidrológicos": s("hid_total"), "Hidrológico R3+R4": s("hid_R3") + s("hid_R4"),
       "Moradias em setores R3/R4": s("moradias_alto"), "Áreas contaminadas": s("cont_total"),
-      "Ocorrências 2026": s("oc_total"), "Chamados de erosão": s("sac_erosao"),
+      "Ocorrências 2026": s("oc_total"), "Chamados de erosão": s("sac_erosao"), "Quedas de árvore 2026": s("oc_queda_arvore"),
+      "Piscinões em operação": s("dren_existente"), "Obras de drenagem planejadas": s("dren_planejada"),
+      "População": s("populacao"), "% população em alta vulnerabilidade": Math.round(1000 * s("pop_vulneravel") / (s("populacao") || 1)) / 10,
     };
   });
   XLSX.utils.book_append_sheet(wb, folha(grupo("regiao", "Região")), "Por região");
@@ -279,9 +294,9 @@ export function exportarPainelPDF(ctx, graficos) {
   });
   y = doc.lastAutoTable.finalY + 6;
 
-  const titulos = { g1: document.getElementById("t-g1").textContent, g2: document.getElementById("t-g2").textContent, g3: "Ocorrências registradas em 2026, por mês", g4: "Situação das áreas contaminadas" };
+  const titulos = { g1: document.getElementById("t-g1").textContent, g2: document.getElementById("t-g2").textContent, g3: "Ocorrências registradas em 2026, por mês", g4: "Situação das áreas contaminadas", g5: "Risco e vulnerabilidade social por distrito", g6: "Piscinões e obras de drenagem" };
   const larg = (L - 6) / 2, alt = larg * 0.62;
-  ["g1", "g2", "g3", "g4"].forEach((id, i) => {
+  ["g1", "g2", "g3", "g4", "g5", "g6"].forEach((id, i) => {
     const g = graficos[id];
     if (!g) return;
     const col = i % 2, x = 12 + col * (larg + 6);

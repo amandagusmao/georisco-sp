@@ -1,6 +1,7 @@
 // Painel (dashboard) por região, subprefeitura e distrito.
 import { carregar, corIndice, nivelIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_OCORR, COR_CONT, fmt, esc } from "./dados.js";
 import { exportarPainelXLSX, exportarPainelPDF } from "./exportar.js";
+import { corVulneravel } from "./mapa.js";
 
 const REGIOES = ["Centro", "Norte", "Sul", "Leste", "Oeste"];
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -93,7 +94,7 @@ function desenhar() {
   const sel = selecao();
   $("kpis-painel").innerHTML = kpisHTML(kpis(sel));
   painelDistrito(sel);
-  g1(sel); g2(sel); g3(sel); g4(sel);
+  g1(sel); g2(sel); g3(sel); g4(sel); g5(sel); g6(sel);
   tabela();
 }
 
@@ -114,9 +115,13 @@ function painelDistrito(sel) {
         <li><b>${fmt(d.geo_total)}</b> setores de risco geológico (R4: ${d.geo_R4}, R3: ${d.geo_R3}, R2: ${d.geo_R2}, R1: ${d.geo_R1})</li>
         <li><b>${fmt(d.hid_total)}</b> setores de risco hidrológico (R4: ${d.hid_R4}, R3: ${d.hid_R3}, R2: ${d.hid_R2}, R1: ${d.hid_R1})</li>
         <li><b>${fmt(d.moradias_alto)}</b> moradias em setores de risco alto ou muito alto</li>
-        <li><b>${fmt(d.pct_inundavel)}%</b> da área é inundável · <b>${fmt(d.pct_encosta)}%</b> são encostas (morros/serras) · <b>${fmt(d.pct_planicie)}%</b> várzeas</li>
+        <li><b>${fmt(d.pct_inundavel)}%</b> da área pode alagar em chuva extrema (100 anos) ·<b>${fmt(d.pct_encosta)}%</b> são encostas (morros/serras) · <b>${fmt(d.pct_planicie)}%</b> várzeas</li>
         <li><b>${d.cont_total}</b> áreas contaminadas cadastradas (${d.cont_contaminada} contaminadas, ${d.cont_investigacao} sob investigação, ${d.cont_monitoramento} em monitoramento, ${d.cont_reabilitada} reabilitadas)</li>
-        <li><b>${d.oc_total}</b> ocorrências em 2026 (${d.oc_alagamento} alagamentos, ${d.oc_inundacao} inundações, ${d.oc_deslizamento} deslizamentos) e ${d.sac_erosao} chamados de erosão</li>
+        <li><b>${d.oc_total}</b> ocorrências em 2026 (${d.oc_alagamento} alagamentos, ${d.oc_inundacao} inundações, ${d.oc_deslizamento} deslizamentos), ${d.sac_erosao} chamados de erosão e ${d.oc_queda_arvore} quedas de árvore</li>
+        <li><b>${fmt(d.pct_alaga_5)}%</b> da área alaga a cada 5 anos, em média · <b>${fmt(d.pct_declive_25)}%</b> tem inclinação acima de 25%</li>
+        <li><b>${d.dren_existente}</b> piscinões em operação e <b>${d.dren_planejada}</b> obras de drenagem planejadas</li>
+        <li><b>${fmt(d.pct_vulneravel)}%</b> da população (${fmt(d.pop_vulneravel)} de ${fmt(d.populacao)} pessoas) em alta ou muito alta vulnerabilidade social</li>
+        ${d.sede_endereco ? `<li>Atendimento: <b>Subprefeitura ${esc(d.subprefeitura)}</b>, ${esc(d.sede_endereco)}, telefone ${esc(d.sede_telefone)}</li>` : ""}
       </ul>
     </div>
     <div class="acoes-res" style="margin:14px 0 0"><a class="btn btn-sec" href="#mapa" data-ver-mapa="${d.id}">Ver no mapa</a><button class="btn btn-sec" data-limpar>Voltar à visão geral</button></div>
@@ -199,7 +204,7 @@ function g3(sel) {
   const oc = OC.filter((o) => nomes.has(o.distrito) && o.data?.startsWith("2026"));
   const ultimo = Math.max(8, ...oc.map((o) => +o.data.slice(5, 7) - 1));
   const meses = MESES.slice(0, ultimo + 1);
-  const tipos = ["Alagamento", "Inundação", "Deslizamento", "Erosão (chamado)"];
+  const tipos = ["Alagamento", "Inundação", "Deslizamento", "Queda de árvore", "Erosão (chamado)"];
   grafico("g3", {
     type: "bar",
     data: {
@@ -223,6 +228,43 @@ function g4(sel) {
   });
 }
 
+function g5(sel) {
+  const marcados = new Set(sel.map((d) => d.id));
+  grafico("g5", {
+    type: "scatter",
+    data: {
+      datasets: [
+        { label: "Distritos selecionados", data: D.filter((d) => marcados.has(d.id)).map((d) => ({ x: d.idx_geral, y: d.pct_vulneravel, nome: d.nome })), backgroundColor: "#22c55e", pointRadius: 5, pointHoverRadius: 7 },
+        { label: "Demais distritos", data: D.filter((d) => !marcados.has(d.id)).map((d) => ({ x: d.idx_geral, y: d.pct_vulneravel, nome: d.nome })), backgroundColor: "#3a4d45", pointRadius: 3 },
+      ],
+    },
+    options: {
+      scales: {
+        x: { min: 0, max: 100, title: { display: true, text: "Índice geral de risco (0 a 100)" } },
+        y: { min: 0, title: { display: true, text: "% da população em alta vulnerabilidade" } },
+      },
+      plugins: { tooltip: { callbacks: { label: (c) => `${c.raw.nome}: risco ${c.raw.x}, ${fmt(c.raw.y)}% vulnerável` } } },
+    },
+  });
+}
+
+function g6(sel) {
+  let chave = "regiao", grupos = REGIOES;
+  if (f.distrito || f.sub) { chave = "nome"; grupos = sel.map((d) => d.nome); }
+  else if (f.regiao) { chave = "subprefeitura"; grupos = [...new Set(sel.map((d) => d.subprefeitura))]; }
+  grafico("g6", {
+    type: "bar",
+    data: {
+      labels: grupos,
+      datasets: [
+        { label: "Piscinões em operação", backgroundColor: "#22c55e", data: grupos.map((g) => soma(sel.filter((d) => d[chave] === g), "dren_existente")) },
+        { label: "Obras planejadas", backgroundColor: "#a3e635", data: grupos.map((g) => soma(sel.filter((d) => d[chave] === g), "dren_planejada")) },
+      ],
+    },
+    options: { scales: { x: { ticks: { autoSkip: false, maxRotation: 60 } }, y: { beginAtZero: true, ticks: { precision: 0 } } } },
+  });
+}
+
 function tabela() {
   const q = $("busca-tabela").value.trim().toLowerCase().normalize("NFD").replace(/\p{Diacritic}/gu, "");
   const sel = (f.distrito ? D.filter((d) => (!f.regiao || d.regiao === f.regiao) && (!f.sub || d.subprefeitura === f.sub)) : selecao())
@@ -241,7 +283,7 @@ function tabela() {
     <td>${d.ranking}</td><td><b>${esc(d.nome)}</b><br><small>${esc(d.subprefeitura)}</small></td><td>${d.regiao}</td>
     <td><span class="tag-nivel" style="--c:${corIndice(d.idx_geral)}">${d.idx_geral} · ${d.nivel}</span></td>
     <td>${barra(d.idx_deslizamento)}</td><td>${barra(d.idx_alagamento)}</td><td>${barra(d.idx_erosao)}</td><td>${barra(d.idx_contaminacao)}</td>
-    <td>${fmt(d.moradias_alto)}</td></tr>`).join("") || `<tr><td colspan="9">Nenhum distrito encontrado.</td></tr>`;
+    <td>${fmt(d.moradias_alto)}</td><td><span class="barra-idx"><i style="width:${Math.max(4, d.pct_vulneravel * 0.6)}px;--c:${corVulneravel(d.pct_vulneravel)}"></i>${fmt(d.pct_vulneravel)}%</span></td></tr>`).join("") || `<tr><td colspan="10">Nenhum distrito encontrado.</td></tr>`;
 }
 
 export { nivelIndice };

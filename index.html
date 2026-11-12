@@ -104,7 +104,7 @@
           <a class="card-acao" href="#painel"><svg class="ic ic-card"><use href="#i-grafico"/></svg><h3>Painel por região</h3><p>Indicadores das 5 regiões, 32 subprefeituras e 96 distritos, com exportação em Excel e PDF.</p><span class="mais">Ver painel <svg class="ic"><use href="#i-seta"/></svg></span></a>
           <a class="card-acao" href="#chuva"><svg class="ic ic-card"><use href="#i-chuva"/></svg><h3>Chuva e alerta</h3><p>Previsão para os próximos 7 dias e chuva acumulada, que aumenta o risco de deslizamentos.</p><span class="mais">Ver previsão <svg class="ic"><use href="#i-seta"/></svg></span></a>
           <a class="card-acao" href="#riscos"><svg class="ic ic-card"><use href="#i-livro"/></svg><h3>Entenda os riscos</h3><p>O que é cada risco, sinais de alerta e como agir antes, durante e depois da chuva.</p><span class="mais">Saiba mais <svg class="ic"><use href="#i-seta"/></svg></span></a>
-          <a class="card-acao" href="#riscos-contatos"><svg class="ic ic-card"><use href="#i-fone"/></svg><h3>Contatos de emergência</h3><p>Defesa Civil, Bombeiros, SAMU, Prefeitura e alerta gratuito por SMS.</p><span class="mais">Ver contatos <svg class="ic"><use href="#i-seta"/></svg></span></a>
+          <a class="card-acao" href="#riscos-imovel"><svg class="ic ic-card"><use href="#i-predio"/></svg><h3>Vai comprar ou alugar?</h3><p>Roteiro do que verificar antes de fechar negócio: alagamento, encosta, córrego, solo contaminado e documentos.</p><span class="mais">Ver roteiro <svg class="ic"><use href="#i-seta"/></svg></span></a>
         </div>
 
         <div class="faixa-sms">
@@ -159,6 +159,7 @@
             <option value="idx_alagamento">Alagamento e inundação</option>
             <option value="idx_erosao">Erosão e solapamento</option>
             <option value="idx_contaminacao">Solo contaminado</option>
+            <option value="pct_vulneravel">Vulnerabilidade social</option>
             <option value="nenhum">Sem cor</option>
           </select>
 
@@ -206,6 +207,8 @@
           <div class="cartao"><h3 id="t-g2">Distritos com maior índice de risco</h3><div class="g-alt"><canvas id="g2"></canvas></div></div>
           <div class="cartao"><h3>Ocorrências registradas em 2026, por mês</h3><div class="g-alt"><canvas id="g3"></canvas></div></div>
           <div class="cartao"><h3>Situação das áreas contaminadas</h3><div class="g-alt"><canvas id="g4"></canvas></div></div>
+          <div class="cartao"><h3>Risco e vulnerabilidade social por distrito</h3><div class="g-alt"><canvas id="g5"></canvas></div></div>
+          <div class="cartao"><h3>Piscinões e obras de drenagem</h3><div class="g-alt"><canvas id="g6"></canvas></div></div>
         </div>
 
         <div class="cartao">
@@ -225,6 +228,7 @@
                 <th data-ord="idx_erosao">Erosão</th>
                 <th data-ord="idx_contaminacao">Contam.</th>
                 <th data-ord="moradias_alto">Moradias em risco alto</th>
+                <th data-ord="pct_vulneravel">Vulnerab. social</th>
               </tr></thead>
               <tbody></tbody>
             </table>
@@ -349,6 +353,23 @@
           <li>Lanterna e pilhas</li><li>Rádio a pilha</li><li>Carregador portátil</li><li>Remédios de uso contínuo</li><li>Documentos em saco plástico</li><li>Água potável</li><li>Alimentos não perecíveis</li><li>Kit de primeiros socorros</li><li>Lista de telefones importantes</li>
         </ul>
 
+        <div class="sec-cab" id="riscos-imovel">
+          <p class="sobretitulo">Antes de fechar negócio</p>
+          <h2>Vai comprar ou alugar um imóvel?</h2>
+          <p class="sub-p">Um roteiro simples para não ter surpresas com alagamento, deslizamento ou solo contaminado.</p>
+        </div>
+        <ol class="checklist">
+          <li><b>Consulte o endereço aqui no GeoRisco SP</b> e baixe o relatório em PDF. Veja se o imóvel está em setor de risco, em mancha de inundação ou perto de área contaminada ou aterro.</li>
+          <li><b>Visite em dia de chuva ou logo depois.</b> Procure marcas de água nas paredes, cheiro de umidade, mofo, bueiros entupidos e poças na rua.</li>
+          <li><b>Converse com vizinhos e comerciantes.</b> Pergunte se a rua alaga, se a água já entrou nas casas e se houve deslizamento ou remoção de moradores.</li>
+          <li><b>Observe a construção.</b> Trincas inclinadas, rachaduras em muros, portas e janelas que emperram, piso afundado ou muros tortos podem indicar problema no solo.</li>
+          <li><b>Terreno em encosta:</b> verifique muros de arrimo, drenagem e cortes no barranco. Em inclinação de 30% ou mais, a Lei 6.766/79 só permite lotear com exigências técnicas específicas.</li>
+          <li><b>Perto de córrego:</b> a faixa da margem pode ser Área de Preservação Permanente (Código Florestal, Lei 12.651/2012, e regras do município), com restrições para construir ou ampliar.</li>
+          <li><b>Antigo posto, indústria ou aterro:</b> consulte a relação de áreas contaminadas da CETESB e pergunte se o terreno passou por investigação ou tem restrição de uso (por exemplo, proibição de poço).</li>
+          <li><b>Documentação:</b> peça a matrícula atualizada no cartório, confira o IPTU e verifique na Prefeitura o zoneamento e se a construção é regular.</li>
+          <li><b>Na compra ou reforma,</b> contrate uma vistoria de engenheiro ou arquiteto, com ART ou RRT. Em caso de dúvida sobre risco, ligue 199 (Defesa Civil) ou 156.</li>
+        </ol>
+
         <div class="sec-cab" id="riscos-contatos">
           <p class="sobretitulo">Ajuda</p>
           <h2>Contatos úteis (gratuitos)</h2>
@@ -379,9 +400,14 @@
         <ul>
           <li><b>Áreas de risco geológico</b> (escorregamento e solapamento, graus R1 a R4): Prefeitura de São Paulo e IPT, via <a href="https://geosampa.prefeitura.sp.gov.br/" target="_blank" rel="noopener">GeoSampa</a>.</li>
           <li><b>Áreas de risco hidrológico</b> (alagamento, enchente, inundação, enxurrada): Prefeitura de São Paulo, via GeoSampa.</li>
-          <li><b>Áreas inundáveis</b> (período de retorno de 100 anos): GeoSampa.</li>
+          <li><b>Manchas de inundação</b> para períodos de retorno de 5, 25 e 100 anos: Prefeitura de São Paulo, via GeoSampa.</li>
+          <li><b>Declividade do terreno</b>: Prefeitura de São Paulo, via GeoSampa.</li>
+          <li><b>Reservatórios de amortecimento (piscinões), Plano Diretor de Drenagem e obras de drenagem planejadas</b>: Prefeitura de São Paulo, via GeoSampa.</li>
+          <li><b>Aterros sanitários e de resíduos da construção civil</b>: Prefeitura de São Paulo, via GeoSampa.</li>
+          <li><b>Índice Paulista de Vulnerabilidade Social (IPVS)</b> por setor censitário, Censo 2022: Fundação Seade, via GeoSampa.</li>
+          <li><b>Sedes das subprefeituras</b> (endereço, telefone e horário): GeoSampa.</li>
           <li><b>Áreas contaminadas e reabilitadas</b>: Secretaria Municipal do Verde e do Meio Ambiente (SVMA), via GeoSampa.</li>
-          <li><b>Ocorrências de alagamento, inundação e deslizamento em 2026</b>: Defesa Civil (SIGRC), via GeoSampa.</li>
+          <li><b>Ocorrências de alagamento, inundação, deslizamento e queda de árvore em 2026</b>: Defesa Civil (SIGRC), via GeoSampa.</li>
           <li><b>Chamados de erosão</b>: SP156 e Defesa Civil, via GeoSampa.</li>
           <li><b>Carta Geotécnica de Aptidão à Urbanização</b>: Prefeitura de São Paulo, via GeoSampa.</li>
           <li><b>Distritos, subprefeituras e regiões</b>: GeoSampa.</li>
@@ -394,15 +420,22 @@
         <p>O endereço é convertido em coordenadas e cruzado com as camadas oficiais. Para cada tipo de risco é atribuído um nível de 0 a 4 (Baixo, Atenção, Médio, Alto e Muito alto):</p>
         <ul>
           <li><b>Dentro de um setor de risco mapeado:</b> o nível segue o grau oficial (R1 Atenção, R2 Médio, R3 Alto, R4 Muito alto).</li>
-          <li><b>Até 150 m de um setor R3 ou R4</b>, ou dentro da área inundável de 100 anos: nível Médio ou Alto.</li>
+          <li><b>Até 150 m de um setor R3 ou R4:</b> nível Médio.</li>
+          <li><b>Manchas de inundação:</b> área que alaga a cada 5 anos, em média, recebe nível Alto; a cada 25 ou 100 anos, nível Médio.</li>
+          <li><b>Inclinação do terreno:</b> acima de 60% eleva o risco de deslizamento para Médio; entre 25% e 60%, para Atenção.</li>
+          <li><b>Aterros:</b> aterro desativado a até 500 m eleva o risco de solo contaminado para Médio (gás metano e recalque); qualquer aterro a até 1 km, para Atenção.</li>
           <li><b>Tipo de terreno</b> (Carta Geotécnica): várzeas elevam o risco de inundação; morros e serras elevam o de deslizamento e erosão.</li>
           <li><b>Histórico:</b> ocorrências registradas em 2026 num raio de 500 m.</li>
           <li><b>Solo contaminado:</b> distância até áreas classificadas como contaminadas, sob investigação ou em monitoramento.</li>
         </ul>
         <p>A <b>zona</b> do endereço corresponde ao maior nível encontrado entre os riscos.</p>
         <h3>Índice por distrito (0 a 100)</h3>
-        <p>Para cada distrito somamos pontos: setores de risco ponderados pelo grau (R1=1, R2=2, R3=4, R4=8), ocorrências de 2026, chamados de erosão, porcentagem de área inundável, porcentagem de encostas e áreas contaminadas (contaminada=3, sob investigação=2, em monitoramento=1, reabilitada=0,3). Cada soma é convertida em escala logarítmica de 0 a 100 em relação ao distrito com maior valor. O <b>índice geral</b> é a média ponderada: deslizamento 30%, alagamento e inundação 30%, erosão 20% e contaminação 20%. Faixas: Baixo (abaixo de 35), Moderado (35 a 49), Alto (50 a 64) e Muito alto (65 ou mais).</p>
+        <p>Para cada distrito somamos pontos: setores de risco ponderados pelo grau (R1=1, R2=2, R3=4, R4=8), ocorrências de 2026, chamados de erosão, porcentagem da área que alaga a cada 5 e a cada 100 anos, porcentagem de encostas e de terreno com inclinação acima de 25%, áreas contaminadas (contaminada=3, sob investigação=2, em monitoramento=1, reabilitada=0,3) e aterros (desativado=3, em operação=1). Cada soma é convertida em escala logarítmica de 0 a 100 em relação ao distrito com maior valor. O <b>índice geral</b> é a média ponderada: deslizamento 30%, alagamento e inundação 30%, erosão 20% e contaminação 20%. Faixas: Baixo (abaixo de 35), Moderado (35 a 49), Alto (50 a 64) e Muito alto (65 ou mais).</p>
         <p>O índice é <b>comparativo</b>: mostra quais distritos concentram mais situações de risco, e não a probabilidade de um acidente acontecer.</p>
+        <h3>Vulnerabilidade social</h3>
+        <p>Para cada distrito, somamos a população dos setores censitários classificados nos grupos 5 (vulnerabilidade alta) e 6 (muito alta) do IPVS e dividimos pela população total. Esse indicador não entra no índice de risco; ele aparece separado para mostrar onde o risco atinge as pessoas com menos condições de se proteger.</p>
+        <h3>Manchas de inundação e declividade</h3>
+        <p>Como essas camadas têm centenas de milhares de polígonos, elas foram convertidas em imagens de cerca de 10 m por pixel. Por isso, a resposta pode variar alguns metros em relação ao mapa original da Prefeitura. As manchas só existem nas bacias que já foram estudadas.</p>
 
         <h2>Limitações e aviso importante</h2>
         <p class="alerta">Esta ferramenta é <b>informativa e educativa</b>. Ela <b>não substitui</b> vistoria da Defesa Civil, laudo técnico de profissional habilitado nem alertas oficiais. A localização do endereço pode ter imprecisão de dezenas de metros. A ausência de risco mapeado não garante que o local seja seguro. Em caso de perigo, ligue <b>199</b>.</p>

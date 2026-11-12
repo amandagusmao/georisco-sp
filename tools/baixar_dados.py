@@ -2,7 +2,8 @@
 Baixa as camadas abertas do GeoSampa (WFS da Prefeitura de São Paulo) em GeoJSON.
 
 Uso:  python tools/baixar_dados.py <pasta_destino>
-Depois rode:  python tools/preprocess.py <pasta_destino> data
+Depois rode:  python tools/rasters.py <pasta_destino> data
+        e  python tools/preprocess.py <pasta_destino> data
 """
 import os
 import sys
@@ -14,8 +15,11 @@ CAMADAS = [
     "distrito_municipal", "subprefeitura", "area_risco_geologico", "risco_hidrologico",
     "area_contaminada_reabilitada_svma", "risco_ocorrencia_alagamento",
     "risco_ocorrencia_inundacao", "risco_ocorrencia_deslizamento", "sac_erosao_urgencia",
-    "area_inundavel", "carta_geotecnica",
+    "carta_geotecnica", "declividade", "reservatorio_amortecimento", "plano_diretor_drenagem",
+    "obra_drenagem_planejada", "pde_drenagem_acao_prioritaria_linear", "aterro_sanitario", "aterro_rcc",
+    "sede_subprefeitura", "indice_paulista_vulnerabilidadesocial", "risco_ocorrencia_queda_arvore",
 ]
+# As manchas de inundação (5, 25 e 100 anos) são baixadas como imagem pelo tools/rasters.py.
 
 destino = sys.argv[1] if len(sys.argv) > 1 else "dados_brutos"
 os.makedirs(destino, exist_ok=True)

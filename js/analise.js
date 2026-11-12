@@ -1,5 +1,9 @@
 // Análise de risco de um ponto (endereço) cruzando as camadas oficiais.
 import { carregar, CAMADAS_ANALISE, NIVEIS, fmt, dataBR } from "./dados.js";
+import { consultarRaster } from "./raster.js";
+
+export const INUND_TXT = { 1: "a cada 5 anos, em média (chuvas fortes comuns)", 2: "a cada 25 anos, em média", 3: "apenas em chuvas extremas (a cada 100 anos, em média)" };
+export const DECL_TXT = { 1: "plano (0 a 5%)", 2: "com inclinação suave a moderada (5 a 25%)", 3: "com inclinação forte (25 a 60%)", 4: "com inclinação muito forte (acima de 60%)" };
 
 const GRAU_NIVEL = { R1: 1, R2: 2, R3: 3, R4: 4 };
 const GRAU_TXT = { R1: "R1 (baixo)", R2: "R2 (médio)", R3: "R3 (alto)", R4: "R4 (muito alto)" };
@@ -36,7 +40,7 @@ export async function preCarregar() {
 }
 
 export async function analisarPonto(lat, lng, endereco) {
-  const [dist, geo, hid, cont, oc, inund, carta] = await preCarregar();
+  const [dist, geo, hid, cont, oc, carta, dren, aterros] = await preCarregar();
   const pt = turf.point([lng, lat]);
 
   const distrito = proximos(dist.features, lng, lat, 0).find((f) => turf.booleanPointInPolygon(pt, f))?.properties;
@@ -47,7 +51,11 @@ export async function analisarPonto(lat, lng, endereco) {
   const hidPerto = comDistancia(hid.features, pt, lng, lat, 300);
   const contPerto = comDistancia(cont.features, pt, lng, lat, 500);
   const ocPerto = comDistancia(oc.features, pt, lng, lat, 500);
-  const naInundavel = proximos(inund.features, lng, lat, 0).some((f) => turf.booleanPointInPolygon(pt, f));
+  const drenPerto = comDistancia(dren.features, pt, lng, lat, 1500);
+  const aterroPerto = comDistancia(aterros.features, pt, lng, lat, 1500);
+  let ras = { inund: 0, decl: 0, inundPerto: 0 };
+  try { ras = await consultarRaster(lat, lng); } catch (e) { console.warn(e); }
+  const naInundavel = ras.inund > 0;
 
   const contaOc = (tipo) => ocPerto.filter((x) => x.p.tipo === tipo).length;
   const relevo = terreno?.tipo || "";
@@ -67,6 +75,8 @@ export async function analisarPonto(lat, lng, endereco) {
       if (desl.motivos.length < 3) desl.motivos.push(`Setor de risco ${x.p.grau} (“${x.p.nome}”) a ${x.d} m.`);
     }
   }
+  if (ras.decl === 4) { desl.nivel = Math.max(desl.nivel, 2); desl.motivos.push("Inclinação do terreno muito forte (acima de 60%) no local."); }
+  else if (ras.decl === 3) { desl.nivel = Math.max(desl.nivel, 1); desl.motivos.push("Inclinação do terreno forte (25 a 60%). Acima de 30%, a Lei 6.766/79 só permite lotear com exigências técnicas específicas."); }
   if (encosta) { desl.nivel = Math.max(desl.nivel, 2); desl.motivos.push(`Terreno de ${relevo.toLowerCase()}: encostas inclinadas favorecem deslizamentos.`); }
   else if (ondulado) { desl.nivel = Math.max(desl.nivel, 1); desl.motivos.push(`Terreno de ${relevo.toLowerCase()}: cortes e aterros podem escorregar.`); }
   const nDesl = contaOc("Deslizamento");
@@ -84,7 +94,13 @@ export async function analisarPonto(lat, lng, endereco) {
       if (alag.motivos.length < 3) alag.motivos.push(`Setor de risco de ${x.p.processo.toLowerCase()} (${x.p.grau}) a ${x.d} m.`);
     }
   }
-  if (naInundavel) { alag.nivel = Math.max(alag.nivel, 3); alag.motivos.push("Dentro da mancha de inundação para chuvas extremas (período de retorno de 100 anos)."); }
+  if (ras.inund) {
+    alag.nivel = Math.max(alag.nivel, ras.inund === 1 ? 3 : 2);
+    alag.motivos.push(`Dentro da mancha de inundação da Prefeitura: o local pode alagar ${INUND_TXT[ras.inund]}.`);
+  } else if (ras.inundPerto) {
+    alag.nivel = Math.max(alag.nivel, ras.inundPerto === 1 ? 2 : 1);
+    alag.motivos.push(`A menos de 30 m de área que pode alagar ${INUND_TXT[ras.inundPerto]}.`);
+  }
   if (relevo === "Planície de rio") { alag.nivel = Math.max(alag.nivel, 2); alag.motivos.push("Terreno de várzea (planície de rio): área baixa e plana que naturalmente recebe a água das cheias."); }
   else if (relevo === "Terraço") { alag.nivel = Math.max(alag.nivel, 1); alag.motivos.push("Terreno de terraço, próximo às várzeas: pode alagar em chuvas fortes."); }
   const nAlag = contaOc("Alagamento") + contaOc("Inundação");
@@ -102,7 +118,7 @@ export async function analisarPonto(lat, lng, endereco) {
       if (eros.motivos.length < 3) eros.motivos.push(`Margem de córrego com risco de solapamento (${x.p.grau}) a ${x.d} m.`);
     }
   }
-  if (encosta || ondulado) { eros.nivel = Math.max(eros.nivel, 1); eros.motivos.push("Relevo inclinado: a água da chuva escoa com força e pode abrir sulcos e ravinas."); }
+  if (encosta || ondulado || ras.decl >= 3) { eros.nivel = Math.max(eros.nivel, 1); eros.motivos.push("Relevo inclinado: a água da chuva escoa com força e pode abrir sulcos e ravinas."); }
   const nEros = contaOc("Erosão (chamado)");
   if (nEros) { eros.nivel = Math.max(eros.nivel, 1); eros.motivos.push(`${nEros} chamado(s) de erosão à Prefeitura num raio de 500 m.`); }
 
@@ -121,10 +137,23 @@ export async function analisarPonto(lat, lng, endereco) {
     }
   }
 
+  for (const x of aterroPerto) {
+    const antigo = x.p.situacao === "Desativado";
+    let n = 0;
+    if (antigo && x.d <= 500) n = 2;
+    else if (x.d <= 1000) n = 1;
+    if (n) {
+      cont_.nivel = Math.max(cont_.nivel, n);
+      cont_.motivos.push(antigo
+        ? `${x.p.tipo} desativado “${x.p.nome}” a ${fmt(x.d)} m: o terreno pode liberar gás metano e afundar com o tempo (recalque).`
+        : `${x.p.tipo} em operação “${x.p.nome}” a ${fmt(x.d)} m: possível odor, gases e tráfego de caminhões.`);
+    }
+  }
+
   const riscos = [desl, alag, eros, cont_];
   for (const r of riscos) {
     if (!r.motivos.length) r.motivos.push(r.id === "contaminacao"
-      ? "Nenhuma área contaminada cadastrada num raio de 300 m."
+      ? "Nenhuma área contaminada cadastrada num raio de 300 m nem aterro num raio de 1 km."
       : "Nenhum setor de risco mapeado num raio de 150 m e terreno sem predisposição importante.");
     r.dicas = DICAS[r.id][r.nivel >= 3 ? "alto" : r.nivel >= 1 ? "medio" : "baixo"];
   }
@@ -137,7 +166,8 @@ export async function analisarPonto(lat, lng, endereco) {
   let tipoZona;
   if (geoDentro) tipoZona = `Setor de risco geológico ${geoDentro.p.grau} (${geoDentro.p.processo.toLowerCase()})`;
   else if (hidDentro) tipoZona = `Setor de risco hidrológico ${hidDentro.p.grau} (${hidDentro.p.processo.toLowerCase()})`;
-  else if (naInundavel) tipoZona = "Zona inundável (várzea de rio)";
+  else if (ras.inund === 1) tipoZona = "Zona de inundação frequente (mancha de 5 anos)";
+  else if (naInundavel) tipoZona = `Zona inundável (mancha de ${ras.inund === 2 ? 25 : 100} anos)`;
   else if (contDentro) tipoZona = "Área contaminada cadastrada";
   else if (relevo === "Planície de rio") tipoZona = "Zona de várzea, suscetível a inundação";
   else if (encosta) tipoZona = "Zona de encosta, suscetível a deslizamento";
@@ -153,9 +183,10 @@ export async function analisarPonto(lat, lng, endereco) {
   ];
 
   return {
-    lat, lng, endereco, distrito, terreno, riscos, naInundavel,
+    lat, lng, endereco, distrito, terreno, riscos, naInundavel, ras,
+    quedasArvore: ocPerto.filter((x) => x.p.tipo === "Queda de árvore").length,
     zona: { nivel: max, nome: ZONAS[max], cor: NIVEIS[max].cor, nivelNome: NIVEIS[max].nome, tipo: tipoZona, frase: FRASE[max], principal: max ? principal.nome : null },
-    perto: { geo: geoPerto, hid: hidPerto, cont: contPerto, oc: ocPerto },
+    perto: { geo: geoPerto, hid: hidPerto, cont: contPerto, oc: ocPerto.filter((x) => x.p.tipo !== "Queda de árvore"), dren: drenPerto, aterros: aterroPerto.filter((x) => x.d <= 1000 || x.p.situacao === "Desativado") },
     data: new Date(),
   };
 }

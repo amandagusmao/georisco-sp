@@ -190,7 +190,7 @@ input::placeholder { color: var(--texto-3); }
 .lista-simples { list-style: none; padding: 0; margin: 0; }
 .lista-simples li { padding: 10px 0; border-bottom: 1px solid var(--linha); font-size: .93rem; color: #c9d6d0; }
 .lista-simples li:last-child { border: 0; }
-.lista-simples .dist { display: inline-block; min-width: 72px; color: var(--verde-claro); font-weight: 600; font-variant-numeric: tabular-nums; }
+.lista-simples .dist { display: inline-block; min-width: 92px; color: var(--verde-claro); font-weight: 600; font-variant-numeric: tabular-nums; }
 .acoes-res { display: flex; gap: 10px; flex-wrap: wrap; margin: 16px 0 6px; }
 .titulo-bloco { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 34px 0 6px; flex-wrap: wrap; }
 .titulo-bloco h2 { margin: 0; }
@@ -226,6 +226,10 @@ input::placeholder { color: var(--texto-3); }
 .leaflet-control-attribution a { color: var(--texto-2) !important; }
 .leaflet-control-scale-line { background: rgba(5, 8, 7, .7); color: var(--texto-2); border-color: var(--texto-3); }
 .popup-btn { margin-top: 10px; width: 100%; padding: 9px 10px; font-size: .88rem; }
+.raster-nitido { image-rendering: pixelated; }
+.checklist { counter-reset: item; list-style: none; padding: 0; display: grid; gap: 10px; }
+.checklist li { counter-increment: item; background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 14px 16px 14px 60px; position: relative; color: #c9d6d0; font-size: .94rem; }
+.checklist li::before { content: counter(item, decimal-leading-zero); position: absolute; left: 16px; top: 13px; font-family: var(--fonte-tit); font-weight: 800; font-size: 1.15rem; background: var(--grad); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .rot-distrito { background: rgba(5, 8, 7, .78); border: 1px solid var(--linha-2); border-radius: 4px; padding: 1px 6px; font-size: 11px; font-weight: 600; color: #e9f1ed; white-space: nowrap; transform: translate(-50%, -50%); width: auto !important; height: auto !important; }
 
 /* painel */

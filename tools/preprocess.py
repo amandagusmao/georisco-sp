@@ -238,16 +238,151 @@ for f in load("sac_erosao_urgencia"):
     p = f["properties"]
     oc_out.append(to_feature(g, {"tipo": "Erosão (chamado)", "data": (p["dt_abertura"] or "")[:10],
                                  "local": p["nm_logradouro"] or "", "distrito": D[i]["nome"]}))
+# quedas de árvore (Defesa Civil, 2026): informativo, não entra nos índices geológicos
+for f in load("risco_ocorrencia_queda_arvore"):
+    g = geom(f)
+    if g.is_empty:
+        continue
+    i = district_of(g)
+    stats[i]["oc_queda_arvore"] += 1
+    oc_out.append(to_feature(g, {"tipo": "Queda de árvore", "data": f["properties"]["dt_ocorrencia"][:10],
+                                 "distrito": D[i]["nome"]}))
 dump("ocorrencias.geojson", oc_out)
 
-# ------------------------------------------- área inundável (TR 100 anos)
-inund = [geom(f) for f in load("area_inundavel")]
-inund_u = unary_union(inund)
-dump("area_inundavel.geojson", [to_feature(inund_u, {"tr": 100}, tol=0.00008)])
+# --------------------- manchas de inundação e declividade (tools/rasters.py)
+RAST = json.load(open(os.path.join(SRC, "stats_raster.json"), encoding="utf8"))
 for i, d in enumerate(D):
-    inter = d["g"].intersection(inund_u).area
-    stats[i]["pct_inundavel"] = round(100 * inter / d["g"].area, 1)
-    stats[i]["raw_alag"] += stats[i]["pct_inundavel"] * 0.6
+    r = RAST[d["id"]]
+    s = stats[i]
+    s["pct_alaga_5"] = r["pct_alaga_5"]
+    s["pct_alaga_25"] = r["pct_alaga_25"]
+    s["pct_inundavel"] = r["pct_alaga_100"]
+    s["pct_declive_25"] = r["pct_declive_25"]
+    s["pct_declive_60"] = r["pct_declive_60"]
+    s["raw_alag"] += r["pct_alaga_5"] * 1.0 + r["pct_alaga_100"] * 0.3
+    s["raw_desl"] += r["pct_declive_25"] * 0.1
+    s["raw_eros"] += r["pct_declive_25"] * 0.05
+antigo = os.path.join(OUT, "area_inundavel.geojson")
+if os.path.exists(antigo):
+    os.remove(antigo)
+
+# ------------------------------------------------ obras de drenagem
+dren_out = []
+
+
+def add_dren(g, props, chave):
+    i = district_of(g)
+    stats[i][chave] += 1
+    props["distrito"] = D[i]["nome"]
+    dren_out.append(to_feature(g, props, tol=0.00003))
+
+
+for f in load("reservatorio_amortecimento"):
+    p = f["properties"]
+    vol = p.get("qt_volume_metro")
+    add_dren(geom(f), {
+        "nome": f"Reservatório {title(p['nm_reservatorio'] or '')} ({p['cd_reservatorio'] or 's/ código'})".strip(),
+        "situacao": "Em operação", "tipo": "Reservatório (piscinão)",
+        "detalhe": ", ".join(x for x in [
+            f"capacidade de {int(float(vol)):,} m³".replace(",", ".") if vol not in (None, "None", "") else "",
+            f"córrego {title(p['nm_corrego'])}" if p.get("nm_corrego") else "",
+            f"construído em {p['an_construcao']}" if p.get("an_construcao") else ""] if x),
+        "endereco": p.get("nm_endereco") or ""}, "dren_existente")
+for f in load("plano_diretor_drenagem"):
+    p = f["properties"]
+    add_dren(geom(f), {
+        "nome": p["nm_obra"], "situacao": "Planejada", "tipo": p.get("dc_tipo_obra") or "Obra de drenagem",
+        "detalhe": ", ".join(x for x in [
+            f"bacia {p['nm_bacia']}" if p.get("nm_bacia") else "",
+            f"{int(float(p['qt_populacao_beneficiada'])):,} pessoas beneficiadas".replace(",", ".") if p.get("qt_populacao_beneficiada") not in (None, "", "-") and float(p["qt_populacao_beneficiada"]) > 0 else "",
+            f"custo estimado {p['vl_instalacao']}" if p.get("vl_instalacao") else ""] if x),
+        "endereco": "", "fonte": "Plano Diretor de Drenagem"}, "dren_planejada")
+for f in load("obra_drenagem_planejada"):
+    p = f["properties"]
+    add_dren(geom(f), {"nome": p["nm_intervencao"], "situacao": "Planejada", "tipo": "Obra de drenagem",
+                       "detalhe": f"bacia {p['nm_bacia']}" if p.get("nm_bacia") else "",
+                       "endereco": p.get("nm_endereco") or "", "fonte": "Obras planejadas (PMSP)"}, "dren_planejada")
+for f in load("pde_drenagem_acao_prioritaria_linear"):
+    if not f["geometry"]:
+        continue
+    p = f["properties"]
+    add_dren(geom(f), {"nome": p["nm_obra"], "situacao": "Planejada" if (p.get("tx_tipo_situacao_projeto") or "planej").lower().startswith("planej") else p["tx_tipo_situacao_projeto"].capitalize(),
+                       "tipo": p.get("tx_tipo_intervencao") or "Obra de drenagem", "detalhe": "",
+                       "endereco": "", "fonte": "Plano Diretor Estratégico"}, "dren_planejada")
+
+
+def chave_obra(nome):
+    import unicodedata
+    n = unicodedata.normalize("NFD", nome or "").encode("ascii", "ignore").decode().lower()
+    n = re.sub(r"\(.*?\)", "", n)
+    return " ".join(n.replace("+", " ").split())
+
+
+# remove obras planejadas que já constam como concluídas/em operação e duplicatas entre as fontes
+em_operacao = {chave_obra(f["properties"]["nome"].replace("Reservatório ", "Reservatorio ")) for f in dren_out if f and f["properties"]["situacao"] == "Em operação"}
+vistos = set()
+dren_final = []
+for f in dren_out:
+    if not f:
+        continue
+    p = f["properties"]
+    k = chave_obra(p["nome"])
+    if p["situacao"] != "Em operação":
+        if "conclu" in (p["nome"] or "").lower() or k in em_operacao or k in vistos:
+            stats[[d["nome"] for d in D].index(p["distrito"])]["dren_planejada"] -= 1
+            continue
+        vistos.add(k)
+    dren_final.append(f)
+dump("drenagem.geojson", dren_final)
+
+# ------------------------------------------------------------ aterros
+aterro_out = []
+for camada, tipo in (("aterro_sanitario", "Aterro sanitário"), ("aterro_rcc", "Aterro de entulho (RCC)")):
+    for f in load(camada):
+        p = f["properties"]
+        g = geom(f)
+        nome = p.get("nm_aterro_sanitario") or p.get("nm_aterro_rcc")
+        situacao = p.get("tx_status_aterro_sanitario") or "Ativo"
+        dentro = any(dd["g"].contains(g) for dd in D)
+        if dentro:
+            i = district_of(g)
+            stats[i]["raw_cont"] += 3 if situacao == "Desativado" else 1
+        aterro_out.append(to_feature(g, {"nome": " ".join(nome.split()), "tipo": tipo, "situacao": situacao,
+                                         "endereco": p.get("nm_endereco") or "",
+                                         "distrito": D[district_of(g)]["nome"] if dentro else "fora do município"}))
+dump("aterros.geojson", aterro_out)
+
+# ------------------------------------------------ sedes das subprefeituras
+sub_geo = [(title(f["properties"]["nm_subprefeitura"]), geom(f)) for f in load("subprefeitura")]
+sedes = {}
+sede_out = []
+for f in load("sede_subprefeitura"):
+    p = f["properties"]
+    g = geom(f)
+    sub = next((n for n, sg in sub_geo if sg.contains(g)), None)
+    if not sub:
+        continue
+    info = {"subprefeitura": sub, "endereco": title(p["tx_endereco_equipamento"] or ""),
+            "bairro": title(p["nm_bairro_equipamento"] or ""), "cep": p.get("cd_cep_equipamento") or "",
+            "telefone": f"(11) {p['tx_numero_telefone']}" if p.get("tx_numero_telefone") else "",
+            "horario": (p.get("tx_horario_funcionamento") or "").replace("Seg a Sex", "Segunda a sexta")}
+    sedes[sub] = info
+    sede_out.append(to_feature(g, info))
+dump("subprefeituras.geojson", sede_out)
+
+# --------------------------------------------- vulnerabilidade social (IPVS)
+pop = [Counter() for _ in D]
+for f in load("indice_paulista_vulnerabilidadesocial"):
+    p = f["properties"]
+    if not f["geometry"] or p.get("cd_indice_vulnerabilidade_social") is None:
+        continue
+    i = district_of(geom(f))
+    pop[i][int(p["cd_indice_vulnerabilidade_social"])] += int(p.get("qt_populacao") or 0)
+for i in range(len(D)):
+    tot = sum(pop[i].values()) or 1
+    stats[i]["populacao"] = sum(pop[i].values())
+    stats[i]["pop_vulneravel"] = pop[i][5] + pop[i][6]
+    stats[i]["pct_vulneravel"] = round(100 * (pop[i][5] + pop[i][6]) / tot, 1)
 
 # ------------------------------------------------------- carta geotécnica
 REL_PLANO = {
@@ -288,7 +423,7 @@ for i, d in enumerate(D):
     stats[i]["pct_encosta"] = round(100 * sum(v for k, v in areas.items()
                                               if k in ("Morro baixo", "Morro alto", "Serra", "Morrote alto")) / tot, 1)
     stats[i]["pct_planicie"] = round(100 * areas.get("Planície de rio", 0) / tot, 1)
-    stats[i]["raw_desl"] += stats[i]["pct_encosta"] * 0.15
+    stats[i]["raw_desl"] += stats[i]["pct_encosta"] * 0.1
     stats[i]["raw_eros"] += stats[i]["pct_encosta"] * 0.1
 
 # --------------------------------------------------------- índices de 0 a 100
@@ -309,7 +444,8 @@ INT_KEYS = ["geo_R1", "geo_R2", "geo_R3", "geo_R4", "geo_total", "hid_R1", "hid_
             "hid_R4", "hid_total", "moradias_geo", "moradias_hid", "moradias_alto",
             "setores_escorregamento", "setores_solapamento", "cont_contaminada",
             "cont_investigacao", "cont_monitoramento", "cont_reabilitada", "cont_total",
-            "oc_total", "oc_alagamento", "oc_inundacao", "oc_deslizamento", "sac_erosao"]
+            "oc_total", "oc_alagamento", "oc_inundacao", "oc_deslizamento", "sac_erosao",
+            "oc_queda_arvore", "dren_existente", "dren_planejada", "populacao", "pop_vulneravel"]
 dist_out = []
 resumo = []
 for i, d in enumerate(D):
@@ -317,7 +453,12 @@ for i, d in enumerate(D):
     rec = {k: d[k] for k in ("id", "nome", "subprefeitura", "regiao", "regiao8", "area_km2")}
     for k in INT_KEYS:
         rec[k] = int(s.get(k, 0))
-    rec["pct_inundavel"] = s["pct_inundavel"]
+    for k in ("pct_inundavel", "pct_alaga_5", "pct_alaga_25", "pct_declive_25", "pct_declive_60", "pct_vulneravel"):
+        rec[k] = s[k]
+    sede = sedes.get(d["subprefeitura"], {})
+    rec["sede_endereco"] = ", ".join(x for x in [sede.get("endereco"), sede.get("bairro"), f"CEP {sede['cep']}" if sede.get("cep") else ""] if x)
+    rec["sede_telefone"] = sede.get("telefone", "")
+    rec["sede_horario"] = sede.get("horario", "")
     rec["pct_encosta"] = s["pct_encosta"]
     rec["pct_planicie"] = s["pct_planicie"]
     rec["terreno_predominante"] = s["terreno_predominante"]
