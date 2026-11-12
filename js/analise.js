@@ -1,6 +1,6 @@
 // Análise de risco de um ponto (endereço) cruzando as camadas oficiais.
-import { carregar, CAMADAS_ANALISE, NIVEIS, fmt, dataBR } from "./dados.js";
-import { consultarRaster } from "./raster.js";
+import { carregar, CAMADAS_ANALISE, NIVEIS, fmt, dataBR } from "./dados.js?v=3";
+import { consultarRaster } from "./raster.js?v=3";
 
 export const INUND_TXT = { 1: "a cada 5 anos, em média (chuvas fortes comuns)", 2: "a cada 25 anos, em média", 3: "apenas em chuvas extremas (a cada 100 anos, em média)" };
 export const DECL_TXT = { 1: "plano (0 a 5%)", 2: "com inclinação suave a moderada (5 a 25%)", 3: "com inclinação forte (25 a 60%)", 4: "com inclinação muito forte (acima de 60%)" };

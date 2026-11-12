@@ -1,7 +1,7 @@
 // Painel (dashboard) por região, subprefeitura e distrito.
-import { carregar, corIndice, nivelIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_OCORR, COR_CONT, fmt, esc } from "./dados.js";
-import { exportarPainelXLSX, exportarPainelPDF } from "./exportar.js";
-import { corVulneravel } from "./mapa.js";
+import { carregar, corIndice, nivelIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_OCORR, COR_CONT, fmt, esc } from "./dados.js?v=3";
+import { exportarPainelXLSX, exportarPainelPDF } from "./exportar.js?v=3";
+import { corVulneravel } from "./mapa.js?v=3";
 
 const REGIOES = ["Centro", "Norte", "Sul", "Leste", "Oeste"];
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];

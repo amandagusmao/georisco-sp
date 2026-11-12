@@ -1,5 +1,5 @@
 // Previsão e acumulado de chuva (Open-Meteo, gratuito e sem chave).
-import { esc } from "./dados.js";
+import { esc } from "./dados.js?v=3";
 
 const DIAS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 

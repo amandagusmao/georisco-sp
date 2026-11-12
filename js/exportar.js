@@ -1,6 +1,6 @@
 // Exportação para Excel (SheetJS) e PDF (jsPDF + autoTable).
-import { fmt, dataBR, NIVEIS } from "./dados.js";
-import { INUND_TXT, DECL_TXT } from "./analise.js";
+import { fmt, dataBR, NIVEIS } from "./dados.js?v=3";
+import { INUND_TXT, DECL_TXT } from "./analise.js?v=3";
 
 const VERDE = [6, 78, 59];
 const VERDE_VIVO = [34, 197, 94];

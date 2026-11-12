@@ -1,9 +1,10 @@
 // Carregamento (com cache) dos arquivos de dados e utilitários comuns.
+const VERSAO = 3;
 const cache = {};
 
 export function carregar(nome) {
   if (!cache[nome]) {
-    cache[nome] = fetch(`data/${nome}`).then((r) => {
+    cache[nome] = fetch(`data/${nome}?v=${VERSAO}`).then((r) => {
       if (!r.ok) throw new Error(`Falha ao carregar ${nome}`);
       return r.json();
     }).then((d) => {

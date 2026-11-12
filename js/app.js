@@ -1,11 +1,11 @@
 // GeoRisco SP: controle das páginas, busca e resultado da consulta.
-import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js";
-import { buscarEndereco, enderecoDoPonto } from "./geocode.js";
-import { analisarPonto, preCarregar, INUND_TXT, DECL_TXT } from "./analise.js";
-import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js";
-import { iniciarPainel, selecionarDistrito, kpisHTML } from "./painel.js";
-import { iniciarChuva, obterChuva, chuvaHTML } from "./chuva.js";
-import { exportarEnderecoPDF, exportarEnderecoXLSX } from "./exportar.js";
+import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js?v=3";
+import { buscarEndereco, enderecoDoPonto } from "./geocode.js?v=3";
+import { analisarPonto, preCarregar, INUND_TXT, DECL_TXT } from "./analise.js?v=3";
+import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js?v=3";
+import { iniciarPainel, selecionarDistrito, kpisHTML } from "./painel.js?v=3";
+import { iniciarChuva, obterChuva, chuvaHTML } from "./chuva.js?v=3";
+import { exportarEnderecoPDF, exportarEnderecoXLSX } from "./exportar.js?v=3";
 
 const PAGINAS = ["inicio", "consulta", "mapa", "painel", "chuva", "riscos", "sobre"];
 let resultadoAtual = null;

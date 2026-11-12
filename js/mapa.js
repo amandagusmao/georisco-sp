@@ -1,9 +1,10 @@
 // Mapa interativo (Leaflet) e mini-mapa do resultado.
+const VERSAO = 3;
 import {
   carregar, corIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_CONT,
   COR_OCORR, COR_SUSC, COR_INUND, COR_DREN, COR_ATERRO, esc, fmt, dataBR,
-} from "./dados.js";
-import { limitesRaster } from "./raster.js";
+} from "./dados.js?v=3";
+import { limitesRaster } from "./raster.js?v=3";
 
 const CENTRO = [-23.62, -46.62];
 const BASE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -49,8 +50,8 @@ const pontos = {
 const CAMADAS = [
   { id: "geo", nome: "Risco de deslizamento e solapamento", arquivo: "risco_geologico.geojson", cor: "#dc3c3c", ativo: true, pane: "risco" },
   { id: "hid", nome: "Risco de alagamento e inundação", arquivo: "risco_hidrologico.geojson", cor: "#22d3ee", ativo: true, pane: "risco" },
-  { id: "inund", nome: "Manchas de inundação (5, 25 e 100 anos)", imagem: "data/raster/inundacao.png", cor: "#3b82f6", ativo: false, pane: "fundo2" },
-  { id: "decl", nome: "Inclinação forte do terreno", imagem: "data/raster/declividade.png", cor: "#d9a441", ativo: false, pane: "fundo1" },
+  { id: "inund", nome: "Manchas de inundação (5, 25 e 100 anos)", imagem: `data/raster/inundacao.png?v=${VERSAO}`, cor: "#3b82f6", ativo: false, pane: "fundo2" },
+  { id: "decl", nome: "Inclinação forte do terreno", imagem: `data/raster/declividade.png?v=${VERSAO}`, cor: "#d9a441", ativo: false, pane: "fundo1" },
   { id: "cont", nome: "Áreas contaminadas", arquivo: "areas_contaminadas.geojson", cor: "#c2410c", ativo: false, pane: "risco" },
   { id: "aterro", nome: "Aterros sanitários e de entulho", arquivo: "aterros.geojson", cor: "#f59e0b", ativo: false, pane: "pontos" },
   { id: "dren", nome: "Piscinões e obras de drenagem", arquivo: "drenagem.geojson", cor: "#22c55e", ativo: false, pane: "risco" },
@@ -215,7 +216,7 @@ export async function miniMapa(el, res) {
   mini = L.map(el, { scrollWheelZoom: false }).setView([res.lat, res.lng], 16);
   mini.getContainer().classList.add("mapa-escuro");
   L.tileLayer(BASE_URL, { attribution: BASE_ATTR, maxZoom: 19 }).addTo(mini);
-  try { L.imageOverlay("data/raster/inundacao.png", await limitesRaster(), { interactive: false, className: "raster-nitido" }).addTo(mini); } catch { /* sem raster */ }
+  try { L.imageOverlay(`data/raster/inundacao.png?v=${VERSAO}`, await limitesRaster(), { interactive: false, className: "raster-nitido" }).addTo(mini); } catch { /* sem raster */ }
   L.circle([res.lat, res.lng], { radius: 300, color: "#22c55e", weight: 1, dashArray: "4 4", fill: false, interactive: false }).addTo(mini);
   const add = (lista, id) => lista.forEach((x) => {
     const l = pontos[id] && x.f.geometry.type === "Point"
