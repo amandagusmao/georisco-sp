@@ -1,11 +1,12 @@
 // GeoRisco SP: controle das páginas, busca e resultado da consulta.
-import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js?v=3";
-import { buscarEndereco, enderecoDoPonto } from "./geocode.js?v=3";
-import { analisarPonto, preCarregar, INUND_TXT, DECL_TXT } from "./analise.js?v=3";
-import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js?v=3";
-import { iniciarPainel, selecionarDistrito, kpisHTML } from "./painel.js?v=3";
-import { iniciarChuva, obterChuva, chuvaHTML } from "./chuva.js?v=3";
-import { exportarEnderecoPDF, exportarEnderecoXLSX } from "./exportar.js?v=3";
+import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js?v=4";
+import { buscarEndereco, enderecoDoPonto } from "./geocode.js?v=4";
+import { analisarPonto, preCarregar, INUND_TXT, DECL_TXT } from "./analise.js?v=4";
+import { TIPO_CORREGO, nomeCorrego } from "./corregos.js?v=4";
+import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js?v=4";
+import { iniciarPainel, selecionarDistrito, kpisHTML } from "./painel.js?v=4";
+import { iniciarChuva, obterChuva, chuvaHTML } from "./chuva.js?v=4";
+import { exportarEnderecoPDF, exportarEnderecoXLSX } from "./exportar.js?v=4";
 
 const PAGINAS = ["inicio", "consulta", "mapa", "painel", "chuva", "riscos", "sobre"];
 let resultadoAtual = null;
@@ -201,6 +202,7 @@ function renderizar(res) {
       <ul class="lista-simples">
         <li><span class="dist">Inundação</span>${res.ras.inund ? `Dentro da mancha de inundação: pode alagar ${esc(INUND_TXT[res.ras.inund])}.` : res.ras.inundPerto ? `Fora da mancha, mas a menos de 30 m de área que alaga ${esc(INUND_TXT[res.ras.inundPerto])}.` : "Fora das manchas de inundação mapeadas pela Prefeitura."}</li>
         <li><span class="dist">Inclinação</span>${res.ras.decl ? `Terreno ${esc(DECL_TXT[res.ras.decl])}${res.ras.decl >= 3 ? ". Acima de 30%, a Lei 6.766/79 restringe novos loteamentos." : "."}` : "Sem dado de declividade para o ponto."}</li>
+        <li><span class="dist">Córrego</span>${res.corrego.aberto ? `${esc(nomeCorrego(res.corrego.aberto.p))}, ${esc(TIPO_CORREGO[res.corrego.aberto.p.t])}, a ${fmt(res.corrego.aberto.d)} m.${res.corrego.aberto.d <= 30 ? " A faixa de até 30 m da margem pode ser Área de Preservação Permanente, com restrições para construir." : ""}` : "Nenhum córrego a céu aberto num raio de 200 m."}${res.corrego.subterraneo ? ` Córrego canalizado sob a rua a ${fmt(res.corrego.subterraneo.d)} m.` : ""}</li>
         <li><span class="dist">Terreno</span>${res.terreno ? `${esc(res.terreno.tipo)}. ${esc(res.terreno.explicacao)}` : "Sem dado da Carta Geotécnica para o ponto."}</li>
         <li><span class="dist">Aterros</span>${res.perto.aterros.length ? res.perto.aterros.map((x) => `${esc(x.p.tipo)} ${x.p.situacao === "Desativado" ? "desativado" : "em operação"} “${esc(x.p.nome)}” a ${fmt(x.d)} m`).join("; ") + "." : "Nenhum aterro sanitário ou de entulho cadastrado num raio de 1 km."}</li>
       </ul>

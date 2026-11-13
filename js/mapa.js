@@ -1,10 +1,11 @@
 // Mapa interativo (Leaflet) e mini-mapa do resultado.
-const VERSAO = 3;
+const VERSAO = 4;
 import {
   carregar, corIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_CONT,
   COR_OCORR, COR_SUSC, COR_INUND, COR_DREN, COR_ATERRO, esc, fmt, dataBR,
-} from "./dados.js?v=3";
-import { limitesRaster } from "./raster.js?v=3";
+} from "./dados.js?v=4";
+import { limitesRaster } from "./raster.js?v=4";
+import { blocosNaArea, blocoCorregos, TIPO_CORREGO, COR_CORREGO, nomeCorrego } from "./corregos.js?v=4";
 
 const CENTRO = [-23.62, -46.62];
 const BASE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";
@@ -30,6 +31,7 @@ export const popups = {
   carta: (p) => `<h4>Terreno: ${esc(p.tipo)}</h4>${esc(p.explicacao)}<br><small>Unidade ${esc(p.unidade)} · ${esc(p.relevo)} · ${esc(p.rocha)}</small>`,
   dren: (p) => `<h4>${esc(p.nome)}</h4><b>${esc(p.situacao)}</b> · ${esc(p.tipo)}${p.detalhe ? `<br>${esc(p.detalhe)}` : ""}${p.endereco ? `<br>${esc(p.endereco)}` : ""}<br><small>${esc(p.fonte || "Reservatórios de amortecimento (PMSP)")} · ${esc(p.distrito)}</small>`,
   aterro: (p) => `<h4>${esc(p.nome)}</h4>${esc(p.tipo)} · <b>${p.situacao === "Desativado" ? "desativado" : "em operação"}</b><br>${esc(p.endereco)}<br><small>${p.situacao === "Desativado" ? "Antigos aterros podem liberar gás metano e sofrer recalque por décadas." : "Pode haver odor, gases e tráfego de caminhões nas proximidades."}</small>`,
+  corr: (p) => `<h4>${esc(nomeCorrego(p))}</h4>${esc(TIPO_CORREGO[p.t].charAt(0).toUpperCase() + TIPO_CORREGO[p.t].slice(1))}${p.v ? `<br>Próximo a ${esc(p.v)}` : ""}<br><small>Fonte: rede de drenagem, GeoSampa</small>`,
   sede: (p) => `<h4>Subprefeitura ${esc(p.subprefeitura)}</h4>${esc(p.endereco)}, ${esc(p.bairro)}<br>CEP ${esc(p.cep)}<br>Telefone: <b>${esc(p.telefone)}</b><br><small>${esc(p.horario)}</small>`,
 };
 
@@ -38,6 +40,7 @@ export const estilos = {
   hid: (f) => ({ color: COR_GRAU_HID[f.properties.grau], weight: 1, fillColor: COR_GRAU_HID[f.properties.grau], fillOpacity: 0.5 }),
   cont: (f) => ({ color: COR_CONT[f.properties.classe] || "#555", weight: 1.5, fillColor: COR_CONT[f.properties.classe] || "#555", fillOpacity: 0.6 }),
   carta: (f) => ({ color: "#0b0f0e", weight: 0.4, fillColor: COR_SUSC[f.properties.susc], fillOpacity: 0.55 }),
+  corr: (f) => ({ color: COR_CORREGO[f.properties.t], weight: f.properties.t === "s" ? 2 : 3, opacity: 0.95, dashArray: f.properties.t === "s" ? "4 5" : null }),
   dren: (f) => ({ color: COR_DREN[f.properties.situacao] || "#a3e635", weight: 3, fillColor: COR_DREN[f.properties.situacao] || "#a3e635", fillOpacity: 0.55, dashArray: f.properties.situacao === "Em operação" ? null : "5 4" }),
 };
 
@@ -55,6 +58,7 @@ const CAMADAS = [
   { id: "cont", nome: "Áreas contaminadas", arquivo: "areas_contaminadas.geojson", cor: "#c2410c", ativo: false, pane: "risco" },
   { id: "aterro", nome: "Aterros sanitários e de entulho", arquivo: "aterros.geojson", cor: "#f59e0b", ativo: false, pane: "pontos" },
   { id: "dren", nome: "Piscinões e obras de drenagem", arquivo: "drenagem.geojson", cor: "#22c55e", ativo: false, pane: "risco" },
+  { id: "corr", nome: "Córregos e rios", imagem: `data/raster/corregos.png?v=${VERSAO}`, cor: "#38bdf8", ativo: false, pane: "fundo2" },
   { id: "oc", nome: "Ocorrências 2026 (inclui queda de árvore)", arquivo: "ocorrencias.geojson", cor: "#e3c443", ativo: false, pane: "pontos" },
   { id: "carta", nome: "Tipo de terreno (carta geotécnica)", arquivo: "carta_geotecnica.geojson", cor: "#4d7c0f", ativo: false, pane: "fundo1" },
   { id: "sede", nome: "Sedes das subprefeituras", arquivo: "subprefeituras.geojson", cor: "#e9f1ed", ativo: false, pane: "pontos" },
@@ -110,6 +114,7 @@ export async function iniciarMapa({ onAnalisar, onDistrito }) {
   });
   const atualizarRotulos = () => (mapa.getZoom() >= 13 ? rotulos.addTo(mapa) : rotulos.remove());
   mapa.on("zoomend", atualizarRotulos);
+  mapa.on("moveend", atualizarCorregos);
 
   // painel de camadas
   const box = document.getElementById("camadas");
@@ -149,9 +154,28 @@ export async function iniciarMapa({ onAnalisar, onDistrito }) {
   return mapa;
 }
 
+// córregos: imagem leve com o mapa afastado e traçado real (por blocos) a partir do zoom 15
+let corrVetor, corrCarregados = new Set();
+async function atualizarCorregos() {
+  const ligado = document.querySelector('[data-camada="corr"]')?.checked;
+  if (!ligado) return;
+  const perto = mapa.getZoom() >= 15;
+  if (!perto) { corrVetor?.remove(); ativas.corr?.addTo(mapa); return; }
+  ativas.corr?.remove();
+  if (!corrVetor) corrVetor = L.geoJSON(null, { pane: "fundo2", renderer: renderersGlobais.fundo2, style: estilos.corr, bubblingMouseEvents: false, onEachFeature: (f, l) => l.bindPopup(popups.corr(f.properties)) });
+  corrVetor.addTo(mapa);
+  const b = mapa.getBounds();
+  const chaves = await blocosNaArea(b.getWest(), b.getSouth(), b.getEast(), b.getNorth());
+  for (const k of chaves) {
+    if (corrCarregados.has(k)) continue;
+    corrCarregados.add(k);
+    try { corrVetor.addData(await blocoCorregos(k)); } catch { corrCarregados.delete(k); }
+  }
+}
+
 async function alternar(id, ligar) {
   const def = CAMADAS.find((c) => c.id === id);
-  if (!ligar) { ativas[id]?.remove(); legenda(); return; }
+  if (!ligar) { ativas[id]?.remove(); if (id === "corr") corrVetor?.remove(); legenda(); return; }
   if (!ativas[id]) {
     try {
       if (def.imagem) {
@@ -162,7 +186,9 @@ async function alternar(id, ligar) {
     } catch (e) { console.error(e); return; }
   }
   const chk = document.querySelector(`[data-camada="${id}"]`);
-  if (chk?.checked) ativas[id].addTo(mapa);
+  if (chk?.checked) {
+    if (id === "corr") atualizarCorregos(); else ativas[id].addTo(mapa);
+  }
   legenda();
 }
 
@@ -191,6 +217,7 @@ function legenda() {
   if (on("cont")) h += "<h4>Áreas contaminadas</h4>" + Object.entries(COR_CONT).map(([g, c]) => linha(c, g)).join("");
   if (on("aterro")) h += "<h4>Aterros</h4>" + linha(COR_ATERRO.Ativo, "Em operação") + linha(COR_ATERRO.Desativado, "Desativado");
   if (on("dren")) h += "<h4>Drenagem</h4>" + linha(COR_DREN["Em operação"], "Piscinão em operação") + linha(COR_DREN.Planejada, "Obra planejada");
+  if (on("corr")) h += "<h4>Córregos e rios</h4>" + linha(COR_CORREGO.n, "Leito natural") + linha(COR_CORREGO.a, "Canalizado a céu aberto") + linha(COR_CORREGO.s, "Canalizado subterrâneo");
   if (on("oc")) h += "<h4>Ocorrências 2026</h4>" + Object.entries(COR_OCORR).map(([g, c]) => linha(c, g)).join("");
   if (on("carta")) h += "<h4>Tipo de terreno (suscetibilidade)</h4>" + [[1, "Colinas e terraços: baixa"], [2, "Morrotes: moderada"], [3, "Várzeas e morros baixos: alta"], [4, "Morros altos e serras: muito alta"]].map(([k, t]) => linha(COR_SUSC[k], t)).join("");
   if (on("sede")) h += "<h4>Atendimento</h4>" + linha("#e9f1ed", "Sede da subprefeitura");
@@ -224,6 +251,7 @@ export async function miniMapa(el, res) {
       : L.geoJSON(x.f, { style: estilos[id] });
     l.bindPopup(popups[id](x.p)).addTo(mini);
   });
+  add((res.corrego?.lista || []).filter((x) => x.p.t !== "l"), "corr");
   add(res.perto.dren, "dren");
   add(res.perto.hid, "hid");
   add(res.perto.geo, "geo");

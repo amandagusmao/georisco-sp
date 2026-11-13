@@ -226,6 +226,11 @@ input::placeholder { color: var(--texto-3); }
 .leaflet-control-attribution a { color: var(--texto-2) !important; }
 .leaflet-control-scale-line { background: rgba(5, 8, 7, .7); color: var(--texto-2); border-color: var(--texto-3); }
 .popup-btn { margin-top: 10px; width: 100%; padding: 9px 10px; font-size: .88rem; }
+.divulgue { display: grid; grid-template-columns: 270px 1fr; gap: 20px; align-items: start; margin: 8px 0 12px; }
+.divulgue-previa img { width: 100%; height: auto; display: block; border-radius: 12px; border: 1px solid var(--linha-2); }
+.divulgue-lista { display: grid; gap: 10px; }
+.divulgue-lista .contato b { min-width: 96px; font-size: 1.15rem; }
+@media (max-width: 640px) { .divulgue { grid-template-columns: 1fr; } .divulgue-previa { max-width: 270px; } }
 .raster-nitido { image-rendering: pixelated; }
 .checklist { counter-reset: item; list-style: none; padding: 0; display: grid; gap: 10px; }
 .checklist li { counter-increment: item; background: var(--cartao); border: 1px solid var(--linha); border-radius: 12px; padding: 14px 16px 14px 60px; position: relative; color: #c9d6d0; font-size: .94rem; }
@@ -314,3 +319,5 @@ input::placeholder { color: var(--texto-3); }
 @media print {
   .topo, .rodape, .busca, .acoes-res, .exportar { display: none !important; }
 }
+
+[id] { scroll-margin-top: 84px; }

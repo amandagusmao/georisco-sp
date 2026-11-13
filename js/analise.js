@@ -1,6 +1,7 @@
 // Análise de risco de um ponto (endereço) cruzando as camadas oficiais.
-import { carregar, CAMADAS_ANALISE, NIVEIS, fmt, dataBR } from "./dados.js?v=3";
-import { consultarRaster } from "./raster.js?v=3";
+import { carregar, CAMADAS_ANALISE, NIVEIS, fmt, dataBR } from "./dados.js?v=4";
+import { consultarRaster } from "./raster.js?v=4";
+import { corregosPerto, nomeCorrego, TIPO_CORREGO } from "./corregos.js?v=4";
 
 export const INUND_TXT = { 1: "a cada 5 anos, em média (chuvas fortes comuns)", 2: "a cada 25 anos, em média", 3: "apenas em chuvas extremas (a cada 100 anos, em média)" };
 export const DECL_TXT = { 1: "plano (0 a 5%)", 2: "com inclinação suave a moderada (5 a 25%)", 3: "com inclinação forte (25 a 60%)", 4: "com inclinação muito forte (acima de 60%)" };
@@ -55,6 +56,10 @@ export async function analisarPonto(lat, lng, endereco) {
   const aterroPerto = comDistancia(aterros.features, pt, lng, lat, 1500);
   let ras = { inund: 0, decl: 0, inundPerto: 0 };
   try { ras = await consultarRaster(lat, lng); } catch (e) { console.warn(e); }
+  let corr = [];
+  try { corr = await corregosPerto(lat, lng, 200); } catch (e) { console.warn(e); }
+  const abertoPerto = corr.find((x) => x.p.t === "n" || x.p.t === "a") || null;
+  const subPerto = corr.find((x) => x.p.t === "s") || null;
   const naInundavel = ras.inund > 0;
 
   const contaOc = (tipo) => ocPerto.filter((x) => x.p.tipo === tipo).length;
@@ -101,6 +106,8 @@ export async function analisarPonto(lat, lng, endereco) {
     alag.nivel = Math.max(alag.nivel, ras.inundPerto === 1 ? 2 : 1);
     alag.motivos.push(`A menos de 30 m de área que pode alagar ${INUND_TXT[ras.inundPerto]}.`);
   }
+  if (abertoPerto && abertoPerto.d <= 30) { alag.nivel = Math.max(alag.nivel, 1); alag.motivos.push(`${nomeCorrego(abertoPerto.p)} (${TIPO_CORREGO[abertoPerto.p.t]}) a ${abertoPerto.d} m: em chuvas fortes o nível sobe rápido.`); }
+  if (subPerto && subPerto.d <= 20) { alag.nivel = Math.max(alag.nivel, 1); alag.motivos.push(`Córrego canalizado sob a rua a ${subPerto.d} m: a galeria pode transbordar em chuvas fortes.`); }
   if (relevo === "Planície de rio") { alag.nivel = Math.max(alag.nivel, 2); alag.motivos.push("Terreno de várzea (planície de rio): área baixa e plana que naturalmente recebe a água das cheias."); }
   else if (relevo === "Terraço") { alag.nivel = Math.max(alag.nivel, 1); alag.motivos.push("Terreno de terraço, próximo às várzeas: pode alagar em chuvas fortes."); }
   const nAlag = contaOc("Alagamento") + contaOc("Inundação");
@@ -119,6 +126,7 @@ export async function analisarPonto(lat, lng, endereco) {
     }
   }
   if (encosta || ondulado || ras.decl >= 3) { eros.nivel = Math.max(eros.nivel, 1); eros.motivos.push("Relevo inclinado: a água da chuva escoa com força e pode abrir sulcos e ravinas."); }
+  if (abertoPerto && abertoPerto.p.t === "n" && abertoPerto.d <= 30) { eros.nivel = Math.max(eros.nivel, 1); eros.motivos.push(`Margem de córrego em leito natural a ${abertoPerto.d} m: a correnteza pode desgastar o barranco (solapamento).`); }
   const nEros = contaOc("Erosão (chamado)");
   if (nEros) { eros.nivel = Math.max(eros.nivel, 1); eros.motivos.push(`${nEros} chamado(s) de erosão à Prefeitura num raio de 500 m.`); }
 
@@ -169,6 +177,7 @@ export async function analisarPonto(lat, lng, endereco) {
   else if (ras.inund === 1) tipoZona = "Zona de inundação frequente (mancha de 5 anos)";
   else if (naInundavel) tipoZona = `Zona inundável (mancha de ${ras.inund === 2 ? 25 : 100} anos)`;
   else if (contDentro) tipoZona = "Área contaminada cadastrada";
+  else if (abertoPerto && abertoPerto.d <= 30) tipoZona = "Faixa de margem de córrego";
   else if (relevo === "Planície de rio") tipoZona = "Zona de várzea, suscetível a inundação";
   else if (encosta) tipoZona = "Zona de encosta, suscetível a deslizamento";
   else tipoZona = "Fora de setores de risco mapeados";
@@ -185,6 +194,7 @@ export async function analisarPonto(lat, lng, endereco) {
   return {
     lat, lng, endereco, distrito, terreno, riscos, naInundavel, ras,
     quedasArvore: ocPerto.filter((x) => x.p.tipo === "Queda de árvore").length,
+    corrego: { aberto: abertoPerto, subterraneo: subPerto, lista: corr },
     zona: { nivel: max, nome: ZONAS[max], cor: NIVEIS[max].cor, nivelNome: NIVEIS[max].nome, tipo: tipoZona, frase: FRASE[max], principal: max ? principal.nome : null },
     perto: { geo: geoPerto, hid: hidPerto, cont: contPerto, oc: ocPerto.filter((x) => x.p.tipo !== "Queda de árvore"), dren: drenPerto, aterros: aterroPerto.filter((x) => x.d <= 1000 || x.p.situacao === "Desativado") },
     data: new Date(),

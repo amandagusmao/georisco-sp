@@ -13,7 +13,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="">
-  <link rel="stylesheet" href="css/style.css?v=3">
+  <link rel="stylesheet" href="css/style.css?v=4">
 </head>
 <body>
   <!-- Ícones (traço, 24x24) -->
@@ -111,6 +111,12 @@
           <svg class="ic ic-grande"><use href="#i-msg"/></svg>
           <div><strong>Receba alertas da Defesa Civil no celular, de graça.</strong><br>Envie um SMS com o seu CEP para o número <b>40199</b>.</div>
           <a class="btn btn-sec" href="sms:40199">Enviar SMS</a>
+        </div>
+
+        <div class="faixa-sms">
+          <svg class="ic ic-grande"><use href="#i-compartilhar"/></svg>
+          <div><strong>Ajude a divulgar no seu bairro.</strong><br>Baixe gratuitamente o cartaz, o folheto e a imagem para WhatsApp com QR Code.</div>
+          <a class="btn btn-sec" href="#sobre-divulgue">Material de divulgação</a>
         </div>
       </div>
     </section>
@@ -396,6 +402,18 @@
       <div class="container leitura">
         <p>O <b>GeoRisco SP</b> é uma ferramenta gratuita e de código aberto que reúne, em um só lugar e em linguagem simples, as informações públicas sobre riscos geológicos, hidrológicos e ambientais da cidade de São Paulo. O objetivo é que qualquer pessoa, sem conhecimento técnico, consiga saber se mora, trabalha ou pretende se mudar para uma área de risco, e o que fazer a respeito.</p>
 
+        <h2 id="sobre-divulgue">Ajude a divulgar</h2>
+        <p>Quanto mais gente souber que pode consultar o próprio endereço, maior a prevenção. Imprima o cartaz ou o folheto e deixe em escolas, unidades de saúde, igrejas, associações de moradores e no comércio do seu bairro, ou envie a imagem pelo WhatsApp.</p>
+        <div class="divulgue">
+          <a class="divulgue-previa" href="assets/divulgacao/georisco-sp-whatsapp.png" target="_blank" rel="noopener"><img src="assets/divulgacao/georisco-sp-whatsapp.png" alt="Imagem de divulgação do GeoRisco SP com QR Code e telefones de emergência" loading="lazy" width="270" height="338"></a>
+          <div class="divulgue-lista">
+            <a class="contato" href="assets/divulgacao/cartaz-georisco-sp.pdf" download><b>Cartaz</b><span>PDF, tamanho A4, para colar em murais</span></a>
+            <a class="contato" href="assets/divulgacao/folheto-georisco-sp.pdf" download><b>Folheto</b><span>PDF, dois folhetos A5 por folha A4, para recortar e distribuir</span></a>
+            <a class="contato" href="assets/divulgacao/georisco-sp-whatsapp.png" download><b>Imagem</b><span>PNG para WhatsApp, Instagram e grupos do bairro</span></a>
+            <div class="contato"><b>QR Code</b><span>Somente o código, para usar em outros materiais: <a href="assets/divulgacao/qrcode-georisco-sp.png" download>PNG</a> ou <a href="assets/divulgacao/qrcode-georisco-sp.svg" download>SVG</a></span></div>
+          </div>
+        </div>
+
         <h2>Fontes dos dados</h2>
         <ul>
           <li><b>Áreas de risco geológico</b> (escorregamento e solapamento, graus R1 a R4): Prefeitura de São Paulo e IPT, via <a href="https://geosampa.prefeitura.sp.gov.br/" target="_blank" rel="noopener">GeoSampa</a>.</li>
@@ -411,6 +429,7 @@
           <li><b>Chamados de erosão</b>: SP156 e Defesa Civil, via GeoSampa.</li>
           <li><b>Carta Geotécnica de Aptidão à Urbanização</b>: Prefeitura de São Paulo, via GeoSampa.</li>
           <li><b>Distritos, subprefeituras e regiões</b>: GeoSampa.</li>
+          <li><b>Córregos e rios</b> (rede de drenagem: leito natural, canalizado a céu aberto e subterrâneo): Prefeitura de São Paulo, via GeoSampa.</li>
           <li>Endereços: <a href="https://nominatim.org/" target="_blank" rel="noopener">OpenStreetMap/Nominatim</a> e <a href="https://viacep.com.br/" target="_blank" rel="noopener">ViaCEP</a>. Mapa base: colaboradores do OpenStreetMap. Chuva: Open-Meteo.</li>
         </ul>
         <p class="nota">Dados extraídos em 12/11/2026. Os dados são públicos e podem ser atualizados pela Prefeitura a qualquer momento.</p>
@@ -423,6 +442,7 @@
           <li><b>Até 150 m de um setor R3 ou R4:</b> nível Médio.</li>
           <li><b>Manchas de inundação:</b> área que alaga a cada 5 anos, em média, recebe nível Alto; a cada 25 ou 100 anos, nível Médio.</li>
           <li><b>Inclinação do terreno:</b> acima de 60% eleva o risco de deslizamento para Médio; entre 25% e 60%, para Atenção.</li>
+          <li><b>Córregos:</b> córrego a céu aberto a até 30 m eleva o risco de alagamento para Atenção (e o de erosão, se o leito for natural); córrego canalizado sob a rua a até 20 m, alagamento em Atenção.</li>
           <li><b>Aterros:</b> aterro desativado a até 500 m eleva o risco de solo contaminado para Médio (gás metano e recalque); qualquer aterro a até 1 km, para Atenção.</li>
           <li><b>Tipo de terreno</b> (Carta Geotécnica): várzeas elevam o risco de inundação; morros e serras elevam o de deslizamento e erosão.</li>
           <li><b>Histórico:</b> ocorrências registradas em 2026 num raio de 500 m.</li>
@@ -473,6 +493,6 @@
   <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js"></script>
-  <script type="module" src="js/app.js?v=3"></script>
+  <script type="module" src="js/app.js?v=4"></script>
 </body>
 </html>

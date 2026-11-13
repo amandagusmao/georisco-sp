@@ -1,6 +1,7 @@
 // Exportação para Excel (SheetJS) e PDF (jsPDF + autoTable).
-import { fmt, dataBR, NIVEIS } from "./dados.js?v=3";
-import { INUND_TXT, DECL_TXT } from "./analise.js?v=3";
+import { fmt, dataBR, NIVEIS } from "./dados.js?v=4";
+import { INUND_TXT, DECL_TXT } from "./analise.js?v=4";
+import { TIPO_CORREGO, nomeCorrego } from "./corregos.js?v=4";
 
 const VERDE = [6, 78, 59];
 const VERDE_VIVO = [34, 197, 94];
@@ -57,6 +58,7 @@ function linhasProximidades(res) {
   res.perto.hid.forEach((x) => out.push(["Risco hidrológico", `${x.p.nome} (setor ${x.p.setor})`, `${x.p.grau}, ${x.p.processo}`, x.d]));
   res.perto.cont.forEach((x) => out.push(["Área contaminada", x.p.endereco, `${x.p.classe}: ${x.p.contaminantes}`, x.d]));
   res.perto.oc.forEach((x) => out.push([`Ocorrência: ${x.p.tipo}`, x.p.local || x.p.distrito, dataBR(x.p.data), x.d]));
+  (res.corrego?.lista || []).filter((x) => x.p.t !== "l").slice(0, 4).forEach((x) => out.push(["Córrego", nomeCorrego(x.p), TIPO_CORREGO[x.p.t], x.d]));
   res.perto.aterros.forEach((x) => out.push([x.p.tipo, `${x.p.nome} (${x.p.endereco})`, x.p.situacao === "Desativado" ? "Desativado" : "Em operação", x.d]));
   res.perto.dren.slice(0, 8).forEach((x) => out.push(["Obra de drenagem", x.p.nome, `${x.p.situacao}, ${x.p.tipo}`, x.d]));
   return out.sort((a, b) => a[3] - b[3]);
@@ -78,6 +80,7 @@ export function exportarEnderecoXLSX(res) {
     ["Aptidão geotécnica (Carta da Prefeitura)", res.terreno?.aptidao || "não informado"],
     ["Mancha de inundação", res.ras.inund ? `Sim: pode alagar ${INUND_TXT[res.ras.inund]}` : res.ras.inundPerto ? `A menos de 30 m de área que alaga ${INUND_TXT[res.ras.inundPerto]}` : "Fora das manchas mapeadas"],
     ["Inclinação do terreno", res.ras.decl ? `Terreno ${DECL_TXT[res.ras.decl]}` : "sem dado"],
+    ["Córrego a céu aberto mais próximo", res.corrego?.aberto ? `${nomeCorrego(res.corrego.aberto.p)}, ${TIPO_CORREGO[res.corrego.aberto.p.t]}, a ${res.corrego.aberto.d} m` : "Nenhum num raio de 200 m"],
     ["Quedas de árvore em 2026 (500 m)", res.quedasArvore],
     ["Atendimento", d.sede_endereco ? `Subprefeitura ${d.subprefeitura}: ${d.sede_endereco}, telefone ${d.sede_telefone}, ${d.sede_horario}` : "SP156: telefone 156"],
     [], ...FONTES,
