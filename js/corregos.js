@@ -1,5 +1,5 @@
 // Córregos e rios (camada "drenagem" do GeoSampa), divididos em blocos de ~3 km por tools/corregos.py.
-const VERSAO = 4;
+const VERSAO = 5;
 let indiceP;
 const cache = {};
 

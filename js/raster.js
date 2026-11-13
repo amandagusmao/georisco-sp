@@ -1,5 +1,5 @@
 // Consulta aos rasters de inundação e declividade (gerados por tools/rasters.py).
-const VERSAO = 4;
+const VERSAO = 5;
 // Cada pixel dos blocos guarda: inundação (0 nenhuma, 1 = 5 anos, 2 = 25 anos, 3 = 100 anos)
 // + 4 * declividade (0 sem dado, 1 = 0 a 5%, 2 = 5 a 25%, 3 = 25 a 60%, 4 = acima de 60%).
 const R = 6378137;

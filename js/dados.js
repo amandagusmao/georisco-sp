@@ -1,5 +1,5 @@
 // Carregamento (com cache) dos arquivos de dados e utilitários comuns.
-const VERSAO = 4;
+const VERSAO = 5;
 const cache = {};
 
 export function carregar(nome) {

@@ -1,12 +1,12 @@
 // GeoRisco SP: controle das páginas, busca e resultado da consulta.
-import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js?v=4";
-import { buscarEndereco, enderecoDoPonto } from "./geocode.js?v=4";
-import { analisarPonto, preCarregar, INUND_TXT, DECL_TXT } from "./analise.js?v=4";
-import { TIPO_CORREGO, nomeCorrego } from "./corregos.js?v=4";
-import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js?v=4";
-import { iniciarPainel, selecionarDistrito, kpisHTML } from "./painel.js?v=4";
-import { iniciarChuva, obterChuva, chuvaHTML } from "./chuva.js?v=4";
-import { exportarEnderecoPDF, exportarEnderecoXLSX } from "./exportar.js?v=4";
+import { carregar, NIVEIS, NIVEL_DISTRITO, esc, fmt, toast, icone } from "./dados.js?v=5";
+import { buscarEndereco, enderecoDoPonto } from "./geocode.js?v=5";
+import { analisarPonto, preCarregar, INUND_TXT, DECL_TXT } from "./analise.js?v=5";
+import { TIPO_CORREGO, nomeCorrego } from "./corregos.js?v=5";
+import { iniciarMapa, focarPonto, focarDistrito, miniMapa } from "./mapa.js?v=5";
+import { iniciarPainel, selecionarDistrito, kpisHTML } from "./painel.js?v=5";
+import { iniciarChuva, obterChuva, chuvaHTML } from "./chuva.js?v=5";
+import { exportarEnderecoPDF, exportarEnderecoXLSX } from "./exportar.js?v=5";
 
 const PAGINAS = ["inicio", "consulta", "mapa", "painel", "chuva", "riscos", "sobre"];
 let resultadoAtual = null;

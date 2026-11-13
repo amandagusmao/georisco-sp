@@ -1,7 +1,7 @@
 // Exportação para Excel (SheetJS) e PDF (jsPDF + autoTable).
-import { fmt, dataBR, NIVEIS } from "./dados.js?v=4";
-import { INUND_TXT, DECL_TXT } from "./analise.js?v=4";
-import { TIPO_CORREGO, nomeCorrego } from "./corregos.js?v=4";
+import { fmt, dataBR, NIVEIS } from "./dados.js?v=5";
+import { INUND_TXT, DECL_TXT } from "./analise.js?v=5";
+import { TIPO_CORREGO, nomeCorrego } from "./corregos.js?v=5";
 
 const VERDE = [6, 78, 59];
 const VERDE_VIVO = [34, 197, 94];

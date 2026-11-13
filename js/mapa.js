@@ -1,11 +1,11 @@
 // Mapa interativo (Leaflet) e mini-mapa do resultado.
-const VERSAO = 4;
+const VERSAO = 5;
 import {
   carregar, corIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_CONT,
   COR_OCORR, COR_SUSC, COR_INUND, COR_DREN, COR_ATERRO, esc, fmt, dataBR,
-} from "./dados.js?v=4";
-import { limitesRaster } from "./raster.js?v=4";
-import { blocosNaArea, blocoCorregos, TIPO_CORREGO, COR_CORREGO, nomeCorrego } from "./corregos.js?v=4";
+} from "./dados.js?v=5";
+import { limitesRaster } from "./raster.js?v=5";
+import { blocosNaArea, blocoCorregos, TIPO_CORREGO, COR_CORREGO, nomeCorrego } from "./corregos.js?v=5";
 
 const CENTRO = [-23.62, -46.62];
 const BASE_URL = "https://tile.openstreetmap.org/{z}/{x}/{y}.png";

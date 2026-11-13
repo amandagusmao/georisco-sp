@@ -1,7 +1,7 @@
 // Painel (dashboard) por região, subprefeitura e distrito.
-import { carregar, corIndice, nivelIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_OCORR, COR_CONT, fmt, esc } from "./dados.js?v=4";
-import { exportarPainelXLSX, exportarPainelPDF } from "./exportar.js?v=4";
-import { corVulneravel } from "./mapa.js?v=4";
+import { carregar, corIndice, nivelIndice, NIVEL_DISTRITO, COR_GRAU_GEO, COR_GRAU_HID, COR_OCORR, COR_CONT, fmt, esc } from "./dados.js?v=5";
+import { exportarPainelXLSX, exportarPainelPDF } from "./exportar.js?v=5";
+import { corVulneravel } from "./mapa.js?v=5";
 
 const REGIOES = ["Centro", "Norte", "Sul", "Leste", "Oeste"];
 const MESES = ["Jan", "Fev", "Mar", "Abr", "Mai", "Jun", "Jul", "Ago", "Set", "Out", "Nov", "Dez"];
@@ -12,9 +12,15 @@ const $ = (id) => document.getElementById(id);
 const soma = (lista, k) => lista.reduce((s, d) => s + (d[k] || 0), 0);
 const media = (lista, k) => (lista.length ? Math.round(soma(lista, k) / lista.length) : 0);
 
-export async function iniciarPainel() {
-  if (iniciado) { desenhar(); return; }
-  iniciado = true;
+// Uma única carga dos dados: quem chamar enquanto ela está em andamento espera a mesma promessa.
+let carregamento = null;
+export function iniciarPainel() {
+  if (!carregamento) carregamento = prepararPainel().catch((e) => { carregamento = null; throw e; });
+  else if (iniciado) desenhar();
+  return carregamento;
+}
+
+async function prepararPainel() {
   const [res, oc] = await Promise.all([carregar("resumo.json"), carregar("ocorrencias.geojson")]);
   D = res.distritos;
   OC = oc.features.map((x) => x.properties);
@@ -38,12 +44,13 @@ export async function iniciarPainel() {
   };
   $("painel-xlsx").onclick = () => exportarPainelXLSX(contexto());
   $("painel-pdf").onclick = () => exportarPainelPDF(contexto(), graficos);
+  iniciado = true;
   opcoes();
   desenhar();
 }
 
 export async function selecionarDistrito(id) {
-  if (!iniciado) await iniciarPainel();
+  await iniciarPainel();
   const d = D.find((x) => x.id === id);
   if (!d) return;
   f.regiao = d.regiao; f.sub = d.subprefeitura; f.distrito = d.id;
